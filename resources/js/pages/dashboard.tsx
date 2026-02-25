@@ -1,21 +1,13 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    Area,
-    AreaChart,
-    CartesianGrid,
-    Legend,
-    Line,
-    LineChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+    Area, AreaChart,
+    CartesianGrid, ResponsiveContainer,
+    Tooltip, XAxis, YAxis,
 } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
+import { translate, getStoredLocale, setStoredLocale, Locale } from '@/lib/i18n';
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 const fmt = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -25,29 +17,42 @@ const fmtK = (n: number) => {
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return n.toString();
 };
+const fmtRp = (n: number) => `Rp ${fmtK(n)}`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface KPI { occupancy_rate: number; monthly_revenue: number; arr: number; revpar: number; }
+interface KpiMetric { value: number; prev: number; pct: number; dir: 'up' | 'down' | 'neutral'; }
+interface KPI { occupancy_rate: KpiMetric; monthly_revenue: KpiMetric; arr: KpiMetric; revpar: KpiMetric; }
 interface Ops { total_rooms: number; available_rooms: number; occupied_today: number; maintenance: number; pending_bookings: number; }
-interface TrendPoint { month: string; revenue: number; occupancy: number; }
-interface SourceSplit { source: string; count: number; pct: number; }
+interface ChannelRow { source: string; revenue: number; count: number; rev_pct: number; cnt_pct: number; commission: number; }
+interface CommissionSummary { ota_revenue: number; commission_rate: number; ota_commission: number; net_revenue: number; gross_revenue: number; }
+interface CancellationData {
+    total_bookings: number; total_cancelled: number; cancel_rate: number;
+    by_channel: { source: string; total: number; cancelled: number; rate: number }[];
+    trend: { month: string; total: number; cancelled: number; cancel_rate: number }[];
+}
+interface Insight { level: 'success' | 'warning' | 'error' | 'info'; icon: string; title: string; message: string; }
+interface TrendPoint { week: string; revenue: number; occupancy: number; cancel_rate: number; bookings: number; cancelled: number; }
 interface RecentBooking {
     id: number; guest_name: string; guest_email: string;
     check_in_date: string; check_out_date: string; nights: number;
     status: string; total_amount: number; booking_source: string;
     room_number: string | null; room_type: string | null;
 }
+interface Pagination { total: number; per_page: number; page: number; last_page: number; }
 
-interface DashboardProps {
+interface PageProps {
     [key: string]: unknown;
     kpi: KPI; ops: Ops;
+    channelData: ChannelRow[];
+    commissionSummary: CommissionSummary;
+    cancellationData: CancellationData;
+    insights: Insight[];
     chartData: TrendPoint[];
-    period: number;
-    bookingSourceSplit: SourceSplit[];
+    periodWeeks: number;
     recentBookings: RecentBooking[];
+    pagination: Pagination;
 }
 
-// ─── Shared status styles ─────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
     pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
     confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
@@ -56,31 +61,55 @@ const STATUS_STYLES: Record<string, string> = {
     cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
 };
 
+const INSIGHT_STYLES: Record<string, { bar: string; bg: string; title: string }> = {
+    success: { bar: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', title: 'text-emerald-800 dark:text-emerald-300' },
+    warning: { bar: 'bg-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', title: 'text-amber-800 dark:text-amber-300' },
+    error: { bar: 'bg-red-500', bg: 'bg-red-50 dark:bg-red-900/20', title: 'text-red-800 dark:text-red-300' },
+    info: { bar: 'bg-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', title: 'text-indigo-800 dark:text-indigo-300' },
+};
+
+const CHANNEL_COLORS = ['#6366f1', '#10b981', '#f59e0b'];
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ icon, children }: { icon: string; children: React.ReactNode }) {
     return (
         <div className="flex items-center gap-3 mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{children}</h2>
+            <span className="text-base">{icon}</span>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{children}</h2>
             <div className="flex-1 h-px bg-sidebar-border/40" />
         </div>
     );
 }
 
-function KpiCard({ label, value, sub, icon, gradient }: {
-    label: string; value: string; sub?: string; icon: string; gradient: string;
+function DeltaBadge({ metric, locale, isPercent = false }: { metric: KpiMetric; locale: Locale; isPercent?: boolean }) {
+    if (metric.dir === 'neutral') return <span className="text-xs text-white/60">—</span>;
+    const up = metric.dir === 'up';
+    return (
+        <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${up ? 'text-emerald-300' : 'text-red-300'}`}>
+            {up ? '▲' : '▼'} {metric.pct}{isPercent ? 'pp' : '%'}
+            <span className="font-normal opacity-75 ml-0.5">{translate(locale, 'delta.vs_lm')}</span>
+        </span>
+    );
+}
+
+function KpiCard({ label, metric, format, icon, gradient, locale }: {
+    label: string; metric: KpiMetric;
+    format: (v: number) => string; icon: string; gradient: string; locale: Locale;
 }) {
     return (
         <div className={`relative overflow-hidden rounded-2xl p-5 shadow-md ${gradient}`}>
-            {/* Background decorative circle */}
             <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
             <div className="absolute -right-1 -top-1 h-10 w-10 rounded-full bg-white/10" />
-            <div className="relative z-10 flex items-start justify-between">
-                <div>
+            <div className="relative z-10">
+                <div className="flex items-start justify-between mb-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-white/70">{label}</p>
-                    <p className="mt-1 text-2xl font-bold text-white">{value}</p>
-                    {sub && <p className="mt-0.5 text-xs text-white/60">{sub}</p>}
+                    <span className="text-2xl">{icon}</span>
                 </div>
-                <span className="text-2xl">{icon}</span>
+                <p className="text-2xl font-bold text-white">{format(metric.value)}</p>
+                <div className="mt-1 flex items-center justify-between">
+                    <DeltaBadge locale={locale} metric={metric} isPercent={label.toLowerCase().includes('occupancy')} />
+                    <span className="text-xs text-white/50">{format(metric.prev)} {translate(locale, 'delta.vs_lm')}</span>
+                </div>
             </div>
         </div>
     );
@@ -98,244 +127,320 @@ function OpsCard({ label, value, icon, colorClass }: { label: string; value: num
     );
 }
 
-// Source colors
-const SOURCE_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444'];
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Dashboard() {
-    const { kpi, ops, chartData, period, bookingSourceSplit, recentBookings } = usePage<DashboardProps>().props;
-    const [activePeriod, setActivePeriod] = useState(period ?? 6);
-    const [activeChart, setActiveChart] = useState<'revenue' | 'occupancy'>('revenue');
+    const { kpi, ops, channelData, commissionSummary, cancellationData, insights, chartData, periodWeeks, recentBookings, pagination } =
+        usePage<PageProps>().props;
+
+    const [locale, setLocale] = useState<Locale>(getStoredLocale());
+    const [activePeriod, setActivePeriod] = useState(periodWeeks ?? 12);
+    const [activeChart, setActiveChart] = useState<'revenue' | 'occupancy' | 'cancellation'>('revenue');
+
+    const t = (key: string, params?: Record<string, string | number>) => translate(locale, key, params);
+
+    const changeLocale = (l: Locale) => {
+        setLocale(l);
+        setStoredLocale(l);
+    };
 
     const changePeriod = (p: number) => {
         setActivePeriod(p);
         router.get('/dashboard', { period: p }, { preserveState: true, replace: true });
     };
 
-    const totalSource = bookingSourceSplit?.reduce((s, r) => s + r.count, 0) ?? 1;
+    const changePage = (p: number) => {
+        router.get('/dashboard', { page: p, period: activePeriod }, { preserveState: true, replace: true });
+    };
+
+    const monthLabel = new Date().toLocaleString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' });
+
+    // Breadcrumbs translated
+    const translatedBreadcrumbs: BreadcrumbItem[] = [{ title: t('nav.dashboard'), href: '/dashboard' }];
+
+    // Insight Message Parser (handles : params)
+    const parseInsight = (msg: string) => {
+        const [key, ...vals] = msg.split(':');
+        const params: Record<string, any> = {};
+        if (key === 'insight.occ_low_msg' || key === 'insight.occ_high_msg' || key === 'insight.rev_drop_msg' || key === 'insight.rev_grow_msg' || key === 'insight.cancel_high_msg' || key === 'insight.cancel_mid_msg' || key === 'insight.arr_drop_msg' || key === 'insight.direct_msg') {
+            params.v = vals[0];
+        } else if (key === 'insight.ota_dep_msg') {
+            params.v = vals[0];
+            params.c = fmt(Number(vals[1]));
+            params.a = fmt(Number(vals[2]));
+        }
+        return t(key, params);
+    };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+        <AppLayout breadcrumbs={translatedBreadcrumbs}>
+            <Head title={t('dashboard.title')} />
             <div className="flex flex-col gap-8 p-6">
 
-                {/* ══════════════════════════════════════════════════════════
-                    SECTION 1 – Business Performance KPIs
-                ══════════════════════════════════════════════════════════ */}
-                <div>
-                    <SectionTitle>📊 Business Performance — {new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</SectionTitle>
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <KpiCard
-                            label="Occupancy Rate"
-                            value={`${kpi?.occupancy_rate ?? 0}%`}
-                            sub={`${ops?.occupied_today ?? 0} of ${ops?.total_rooms ?? 0} rooms`}
-                            icon="📈"
-                            gradient="bg-gradient-to-br from-indigo-600 to-violet-700"
-                        />
-                        <KpiCard
-                            label="Monthly Revenue"
-                            value={`Rp ${fmtK(kpi?.monthly_revenue ?? 0)}`}
-                            sub={fmt(kpi?.monthly_revenue ?? 0)}
-                            icon="💰"
-                            gradient="bg-gradient-to-br from-emerald-500 to-teal-700"
-                        />
-                        <KpiCard
-                            label="ARR — Avg Room Rate"
-                            value={`Rp ${fmtK(kpi?.arr ?? 0)}`}
-                            sub="Revenue per sold room"
-                            icon="🏷️"
-                            gradient="bg-gradient-to-br from-amber-500 to-orange-600"
-                        />
-                        <KpiCard
-                            label="RevPAR"
-                            value={`Rp ${fmtK(kpi?.revpar ?? 0)}`}
-                            sub="Revenue per available room"
-                            icon="🎯"
-                            gradient="bg-gradient-to-br from-rose-500 to-pink-700"
-                        />
-                    </div>
-                </div>
-
-                {/* ══════════════════════════════════════════════════════════
-                    SECTION 2 – Operational Snapshot
-                ══════════════════════════════════════════════════════════ */}
-                <div>
-                    <SectionTitle>🏨 Operational Snapshot — Today</SectionTitle>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                        <OpsCard label="Total Rooms" value={ops?.total_rooms ?? 0} icon="🏨" colorClass="bg-indigo-100 dark:bg-indigo-900/40" />
-                        <OpsCard label="Available" value={ops?.available_rooms ?? 0} icon="✨" colorClass="bg-emerald-100 dark:bg-emerald-900/40" />
-                        <OpsCard label="Occupied Today" value={ops?.occupied_today ?? 0} icon="🔑" colorClass="bg-blue-100 dark:bg-blue-900/40" />
-                        <OpsCard label="Maintenance" value={ops?.maintenance ?? 0} icon="🔧" colorClass="bg-red-100 dark:bg-red-900/40" />
-                        <OpsCard label="Pending Bookings" value={ops?.pending_bookings ?? 0} icon="⏳" colorClass="bg-amber-100 dark:bg-amber-900/40" />
-                    </div>
-                </div>
-
-                {/* ══════════════════════════════════════════════════════════
-                    SECTION 3 – Trend Charts + Direct vs OTA (side by side)
-                ══════════════════════════════════════════════════════════ */}
-                <div className="grid gap-4 xl:grid-cols-3">
-
-                    {/* Charts — 2/3 width */}
-                    <div className="xl:col-span-2 rounded-2xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:border-sidebar-border dark:bg-sidebar">
-                        {/* Chart Controls */}
-                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex rounded-xl overflow-hidden border border-sidebar-border/60">
-                                {(['revenue', 'occupancy'] as const).map((c) => (
-                                    <button
-                                        key={c}
-                                        onClick={() => setActiveChart(c)}
-                                        className={`px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${activeChart === c
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'text-muted-foreground hover:bg-muted/50'
-                                            }`}
-                                    >
-                                        {c === 'revenue' ? '💰 Revenue' : '📈 Occupancy'}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-1">
-                                {[3, 6, 12].map((p) => (
-                                    <button
-                                        key={p}
-                                        onClick={() => changePeriod(p)}
-                                        className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${activePeriod === p
-                                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
-                                                : 'text-muted-foreground hover:bg-muted/50'
-                                            }`}
-                                    >
-                                        {p}M
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <p className="text-sm font-semibold mb-3">
-                            {activeChart === 'revenue' ? 'Revenue Trend' : 'Occupancy Rate Trend'} — Last {activePeriod} Months
+                {/* ══ Header ══════════════════════════════════════════════ */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                            {t('dashboard.data_for')} <span className="font-semibold text-foreground">{monthLabel}</span> · {t('dashboard.subtitle')}
                         </p>
-
-                        {activeChart === 'revenue' ? (
-                            <ResponsiveContainer width="100%" height={260}>
-                                <AreaChart data={chartData ?? []} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                                    <defs>
-                                        <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                                    <YAxis tickFormatter={(v) => `${fmtK(v)}`} tick={{ fontSize: 11 }} width={55} />
-                                    <Tooltip formatter={(v: number) => fmt(v)} />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="revenue"
-                                        name="Revenue"
-                                        stroke="#6366f1"
-                                        strokeWidth={2.5}
-                                        fill="url(#revGrad)"
-                                        dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <ResponsiveContainer width="100%" height={260}>
-                                <LineChart data={chartData ?? []} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                                    <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} width={45} />
-                                    <Tooltip formatter={(v: number) => `${v}%`} />
-                                    <Legend />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="occupancy"
-                                        name="Occupancy %"
-                                        stroke="#10b981"
-                                        strokeWidth={2.5}
-                                        dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }}
-                                        activeDot={{ r: 6 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        )}
                     </div>
-
-                    {/* Direct vs OTA — 1/3 width */}
-                    <div className="rounded-2xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:border-sidebar-border dark:bg-sidebar">
-                        <p className="text-sm font-semibold mb-1">🔀 Booking Channel Split</p>
-                        <p className="text-xs text-muted-foreground mb-4">Confirmed + Checked In/Out</p>
-
-                        {/* Visual donut-style bar */}
-                        <div className="mb-5 flex h-3 rounded-full overflow-hidden gap-0.5">
-                            {(bookingSourceSplit ?? []).map((s, i) => (
-                                s.pct > 0 && (
-                                    <div
-                                        key={s.source}
-                                        style={{ width: `${s.pct}%`, backgroundColor: SOURCE_COLORS[i] }}
-                                        title={`${s.source}: ${s.pct}%`}
-                                        className="transition-all"
-                                    />
-                                )
+                    <div className="flex items-center gap-3">
+                        {/* Locale Switcher */}
+                        <div className="flex rounded-lg bg-muted p-1 border border-sidebar-border/50">
+                            {(['en', 'id'] as Locale[]).map((l) => (
+                                <button key={l} onClick={() => changeLocale(l)}
+                                    className={`px-3 py-1 text-xs font-bold transition-all rounded ${locale === l
+                                        ? 'bg-white shadow-sm dark:bg-sidebar dark:text-white'
+                                        : 'text-muted-foreground hover:text-foreground'}`}>
+                                    {l.toUpperCase()}
+                                </button>
                             ))}
                         </div>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-xl dark:bg-indigo-900/40">🏨</span>
+                    </div>
+                </div>
 
-                        {/* Legend rows */}
-                        <div className="space-y-3">
-                            {(bookingSourceSplit ?? []).map((s, i) => (
-                                <div key={s.source} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: SOURCE_COLORS[i] }} />
-                                        <span className="text-sm font-medium">{s.source}</span>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-sm font-bold">{s.pct}%</span>
-                                        <span className="ml-2 text-xs text-muted-foreground">({s.count})</span>
-                                    </div>
-                                </div>
-                            ))}
-                            <div className="mt-3 border-t border-sidebar-border/40 pt-3 flex justify-between text-xs text-muted-foreground">
-                                <span>Total bookings</span>
-                                <span className="font-semibold text-foreground">{totalSource}</span>
-                            </div>
-                        </div>
+                {/* ══ SECTION 1 – Business Performance KPIs ═══════════ */}
+                <div>
+                    <SectionTitle icon="📊">{t('section.business')} — {monthLabel}</SectionTitle>
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <KpiCard locale={locale} label={t('kpi.occupancy')} metric={kpi?.occupancy_rate} format={(v) => `${v}%`}
+                            icon="📈" gradient="bg-gradient-to-br from-indigo-600 to-violet-700" />
+                        <KpiCard locale={locale} label={t('kpi.revenue')} metric={kpi?.monthly_revenue} format={fmtRp}
+                            icon="💰" gradient="bg-gradient-to-br from-emerald-500 to-teal-700" />
+                        <KpiCard locale={locale} label={t('kpi.arr')} metric={kpi?.arr} format={fmtRp}
+                            icon="🏷️" gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
+                        <KpiCard locale={locale} label={t('kpi.revpar')} metric={kpi?.revpar} format={fmtRp}
+                            icon="🎯" gradient="bg-gradient-to-br from-rose-500 to-pink-700" />
+                    </div>
+                </div>
 
-                        {/* Insight callout */}
-                        {(() => {
-                            const ota = bookingSourceSplit?.find(s => s.source === 'OTA');
-                            const direct = bookingSourceSplit?.find(s => s.source === 'Direct / Walk-in');
-                            if (!ota || !direct) return null;
-                            const isOtaHeavy = ota.pct > 60;
+                {/* ══ SECTION 2 – Operational Snapshot ════════════════ */}
+                <div>
+                    <SectionTitle icon="🏨">{t('section.ops')}</SectionTitle>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                        <OpsCard label={t('ops.total_rooms')} value={ops?.total_rooms ?? 0} icon="🏨" colorClass="bg-indigo-100 dark:bg-indigo-900/40" />
+                        <OpsCard label={t('ops.available')} value={ops?.available_rooms ?? 0} icon="✨" colorClass="bg-emerald-100 dark:bg-emerald-900/40" />
+                        <OpsCard label={t('ops.occupied')} value={ops?.occupied_today ?? 0} icon="🔑" colorClass="bg-blue-100 dark:bg-blue-900/40" />
+                        <OpsCard label={t('ops.maintenance')} value={ops?.maintenance ?? 0} icon="🔧" colorClass="bg-red-100 dark:bg-red-900/40" />
+                        <OpsCard label={t('ops.pending')} value={ops?.pending_bookings ?? 0} icon="⏳" colorClass="bg-amber-100 dark:bg-amber-900/40" />
+                    </div>
+                </div>
+
+                {/* ══ SECTION 3 – Performance Insights (rule-based) ═══ */}
+                <div>
+                    <SectionTitle icon="🧠">{t('section.insights')}</SectionTitle>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {(insights ?? []).map((ins, i) => {
+                            const s = INSIGHT_STYLES[ins.level] ?? INSIGHT_STYLES.info;
                             return (
-                                <div className={`mt-4 rounded-xl p-3 text-xs ${isOtaHeavy ? 'bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300' : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300'}`}>
-                                    {isOtaHeavy
-                                        ? `⚠️ OTA dependency is high (${ota.pct}%). Consider direct booking incentives to reduce commission costs.`
-                                        : `✅ Healthy direct booking ratio (${direct.pct}%). Lower OTA commissions improve margins.`
-                                    }
+                                <div key={i} className={`flex gap-3 rounded-xl p-4 ${s.bg}`}>
+                                    <div className={`mt-0.5 w-1 flex-shrink-0 rounded-full self-stretch ${s.bar}`} />
+                                    <div>
+                                        <p className={`text-sm font-bold ${s.title}`}>
+                                            {ins.icon} {t(ins.title)}
+                                        </p>
+                                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{parseInsight(ins.message)}</p>
+                                    </div>
                                 </div>
                             );
-                        })()}
+                        })}
                     </div>
                 </div>
 
-                {/* ══════════════════════════════════════════════════════════
-                    SECTION 4 – Recent Bookings
-                ══════════════════════════════════════════════════════════ */}
+                {/* ══ SECTION 4 – Charts (All AreaCharts Weekly) ═══════ */}
+                <div className="rounded-2xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:border-sidebar-border dark:bg-sidebar">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        {/* Chart type toggle */}
+                        <div className="flex rounded-xl overflow-hidden border border-sidebar-border/60">
+                            {([
+                                ['revenue', `💰 ${t('chart.revenue')}`],
+                                ['occupancy', `📈 ${t('chart.occupancy')}`],
+                                ['cancellation', `❌ ${t('chart.cancellation')}`],
+                            ] as const).map(([c, label]) => (
+                                <button key={c} onClick={() => setActiveChart(c)}
+                                    className={`px-4 py-1.5 text-xs font-semibold transition-colors ${activeChart === c
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'text-muted-foreground hover:bg-muted/50'}`}>
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        {/* Period buttons (Weeks) */}
+                        <div className="flex gap-1">
+                            {[4, 8, 12, 26].map((p) => (
+                                <button key={p} onClick={() => changePeriod(p)}
+                                    className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${activePeriod === p
+                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+                                        : 'text-muted-foreground hover:bg-muted/50'}`}>
+                                    {p}W
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-6">
+                        <p className="text-sm font-semibold mb-3">
+                            {activeChart === 'revenue' ? t('chart.revenue_title') :
+                                activeChart === 'occupancy' ? t('chart.occ_title') : t('chart.cancel_title')}
+                            {' — '}
+                            {t('chart.weekly', { n: activePeriod })}
+                        </p>
+
+                        <ResponsiveContainer width="100%" height={260}>
+                            <AreaChart data={chartData ?? []} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                                <defs>
+                                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={activeChart === 'revenue' ? '#6366f1' : activeChart === 'occupancy' ? '#10b981' : '#f59e0b'} stopOpacity={0.25} />
+                                        <stop offset="95%" stopColor={activeChart === 'revenue' ? '#6366f1' : activeChart === 'occupancy' ? '#10b981' : '#f59e0b'} stopOpacity={0.02} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
+                                <XAxis dataKey="week" tick={{ fontSize: 11 }} />
+                                <YAxis yAxisId="val" tickFormatter={(v) => activeChart === 'revenue' ? fmtK(v) : `${v}%`} tick={{ fontSize: 11 }} width={55} />
+                                <Tooltip formatter={(v: number) => activeChart === 'revenue' ? fmt(v) : `${v}%`} />
+                                <Area yAxisId="val" type="monotone"
+                                    dataKey={activeChart === 'revenue' ? 'revenue' : activeChart === 'occupancy' ? 'occupancy' : 'cancel_rate'}
+                                    name={activeChart === 'revenue' ? t('chart.revenue') : activeChart === 'occupancy' ? t('kpi.occupancy') : t('cancel.rate')}
+                                    stroke={activeChart === 'revenue' ? '#6366f1' : activeChart === 'occupancy' ? '#10b981' : '#f59e0b'}
+                                    strokeWidth={2.5}
+                                    fill="url(#areaGrad)"
+                                    dot={{ r: 4, fill: activeChart === 'revenue' ? '#6366f1' : activeChart === 'occupancy' ? '#10b981' : '#f59e0b', strokeWidth: 0 }}
+                                    activeDot={{ r: 6 }}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* ══ SECTION 5 – Revenue by Channel + Commission ════ */}
+                <div className="grid gap-4 xl:grid-cols-3">
+
+                    {/* Channel revenue table — 2/3 */}
+                    <div className="xl:col-span-2 rounded-2xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-sidebar overflow-hidden">
+                        <div className="border-b border-sidebar-border/50 px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t('section.channel')}</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">{monthLabel} · {t('channel.rate')} {commissionSummary?.commission_rate ?? 15}%</p>
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-sidebar-border/40 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                        <th className="px-5 py-3">{t('channel.source')}</th>
+                                        <th className="px-5 py-3 text-right">{t('channel.revenue')}</th>
+                                        <th className="px-5 py-3 text-right">{t('channel.rev_pct')}</th>
+                                        <th className="px-5 py-3 text-right">{t('channel.bookings')}</th>
+                                        <th className="px-5 py-3 text-right">{t('channel.commission')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(channelData ?? []).map((ch, i) => (
+                                        <tr key={ch.source} className="border-b border-sidebar-border/30 last:border-0 hover:bg-muted/30 transition-colors">
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                                        style={{ backgroundColor: CHANNEL_COLORS[i] }} />
+                                                    <span className="font-medium">{ch.source}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-right font-medium">{fmtRp(ch.revenue)}</td>
+                                            <td className="px-5 py-3 text-right">
+                                                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
+                                                    {ch.rev_pct}%
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-3 text-right text-muted-foreground">{ch.count} ({ch.cnt_pct}%)</td>
+                                            <td className="px-5 py-3 text-right">
+                                                {ch.commission > 0
+                                                    ? <span className="text-red-600 dark:text-red-400 font-medium">−{fmtRp(ch.commission)}</span>
+                                                    : <span className="text-muted-foreground">—</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="border-t-2 border-sidebar-border/60 bg-muted/20 font-semibold text-sm">
+                                        <td className="px-5 py-3">{t('channel.net')}</td>
+                                        <td className="px-5 py-3 text-right text-emerald-700 dark:text-emerald-400">{fmtRp(commissionSummary?.net_revenue ?? 0)}</td>
+                                        <td className="px-5 py-3" colSpan={2} />
+                                        <td className="px-5 py-3 text-right text-red-600 dark:text-red-400">
+                                            −{fmtRp(commissionSummary?.ota_commission ?? 0)}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Cancellation summary — 1/3 */}
+                    <div className="rounded-2xl border border-sidebar-border/70 bg-white p-5 shadow-sm dark:border-sidebar-border dark:bg-sidebar">
+                        <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-1">❌ {t('section.cancel')}</p>
+                        <p className="text-xs text-muted-foreground mb-4">{t('cancel.last6')}</p>
+
+                        {/* Big rate number */}
+                        <div className="text-center mb-4">
+                            <p className={`text-5xl font-extrabold ${(cancellationData?.cancel_rate ?? 0) > 20 ? 'text-red-600' :
+                                (cancellationData?.cancel_rate ?? 0) > 10 ? 'text-amber-500' : 'text-emerald-600'
+                                }`}>{cancellationData?.cancel_rate ?? 0}%</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {cancellationData?.total_cancelled ?? 0} {t('cancel.of')} {cancellationData?.total_bookings ?? 0} {t('cancel.bookings')}
+                            </p>
+                        </div>
+
+                        {/* By channel */}
+                        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('cancel.by_channel')}</p>
+                        <div className="space-y-2">
+                            {(cancellationData?.by_channel ?? []).map((ch) => (
+                                <div key={ch.source}>
+                                    <div className="flex justify-between text-xs mb-0.5">
+                                        <span className="capitalize font-medium">{ch.source?.replace('_', ' ')}</span>
+                                        <span className={`font-bold ${ch.rate > 20 ? 'text-red-600' : ch.rate > 10 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                                            {ch.rate}%
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 rounded-full bg-sidebar-border/40 overflow-hidden" title={`${ch.cancelled} / ${ch.total}`}>
+                                        <div className={`h-full rounded-full transition-all ${ch.rate > 20 ? 'bg-red-500' : ch.rate > 10 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                                            style={{ width: `${Math.min(ch.rate, 100)}%` }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Insight */}
+                        <div className={`mt-4 rounded-xl p-3 text-xs ${(cancellationData?.cancel_rate ?? 0) > 20 ? 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300' :
+                            (cancellationData?.cancel_rate ?? 0) > 10 ? 'bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300' :
+                                'bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300'
+                            }`}>
+                            {(cancellationData?.cancel_rate ?? 0) > 20
+                                ? t('cancel.insight_high')
+                                : (cancellationData?.cancel_rate ?? 0) > 10
+                                    ? t('cancel.insight_mid')
+                                    : t('cancel.insight_ok')
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                {/* ══ SECTION 6 – Recent Bookings (with Pagination) ════ */}
                 <div className="rounded-2xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-sidebar overflow-hidden">
                     <div className="flex items-center justify-between border-b border-sidebar-border/50 px-6 py-4">
-                        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Recent Bookings</h2>
-                        <Link href="/bookings" className="text-sm font-medium text-primary hover:underline">View all →</Link>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('section.recent')}</h2>
+                        <Link href="/bookings" className="text-sm font-medium text-primary hover:underline">{t('table.view_all')}</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-sidebar-border/40 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                    <th className="px-6 py-3">Guest</th>
-                                    <th className="px-6 py-3">Room</th>
-                                    <th className="px-6 py-3">Check-in</th>
-                                    <th className="px-6 py-3">Nights</th>
-                                    <th className="px-6 py-3">Amount</th>
-                                    <th className="px-6 py-3">Source</th>
-                                    <th className="px-6 py-3">Status</th>
+                                    <th className="px-6 py-3">{t('table.guest')}</th>
+                                    <th className="px-6 py-3">{t('table.room')}</th>
+                                    <th className="px-6 py-3">{t('table.checkin')}</th>
+                                    <th className="px-6 py-3">{t('table.nights')}</th>
+                                    <th className="px-6 py-3">{t('table.amount')}</th>
+                                    <th className="px-6 py-3">{t('table.source')}</th>
+                                    <th className="px-6 py-3">{t('table.status')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -348,11 +453,10 @@ export default function Dashboard() {
                                         <td className="px-6 py-3">
                                             {b.room_number
                                                 ? <><div className="font-medium">#{b.room_number}</div><div className="text-xs text-muted-foreground">{b.room_type}</div></>
-                                                : <span className="text-muted-foreground">—</span>
-                                            }
+                                                : <span className="text-muted-foreground">—</span>}
                                         </td>
                                         <td className="px-6 py-3">{b.check_in_date}</td>
-                                        <td className="px-6 py-3">{b.nights}N</td>
+                                        <td className="px-6 py-3">{b.nights}{t('misc.night_abbr')}</td>
                                         <td className="px-6 py-3 font-medium">{fmt(b.total_amount)}</td>
                                         <td className="px-6 py-3 text-muted-foreground capitalize">{b.booking_source?.replace('_', ' ')}</td>
                                         <td className="px-6 py-3">
@@ -363,11 +467,35 @@ export default function Dashboard() {
                                     </tr>
                                 ))}
                                 {(recentBookings ?? []).length === 0 && (
-                                    <tr><td colSpan={7} className="px-6 py-10 text-center text-muted-foreground">No bookings yet.</td></tr>
+                                    <tr><td colSpan={7} className="px-6 py-10 text-center text-muted-foreground">{t('table.no_data')}</td></tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
+                    {/* Pagination Controls */}
+                    {pagination && pagination.last_page > 1 && (
+                        <div className="flex items-center justify-between border-t border-sidebar-border/50 bg-muted/10 px-6 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                {t('table.page')} <span className="font-semibold text-foreground">{pagination.page}</span> {t('table.of')} <span className="font-semibold text-foreground">{pagination.last_page}</span> ({pagination.total} {t('cancel.bookings')})
+                            </p>
+                            <div className="flex gap-2 text-xs">
+                                <button
+                                    disabled={pagination.page === 1}
+                                    onClick={() => changePage(pagination.page - 1)}
+                                    className="rounded border border-sidebar-border/60 bg-white px-3 py-1 font-semibold disabled:opacity-40 dark:bg-sidebar"
+                                >
+                                    ←
+                                </button>
+                                <button
+                                    disabled={pagination.page === pagination.last_page}
+                                    onClick={() => changePage(pagination.page + 1)}
+                                    className="rounded border border-sidebar-border/60 bg-white px-3 py-1 font-semibold disabled:opacity-40 dark:bg-sidebar"
+                                >
+                                    →
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
             </div>

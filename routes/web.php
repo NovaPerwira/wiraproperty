@@ -18,20 +18,32 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// ── Dashboard — Hotel Performance Intelligence ─────────────────────────────
 Route::get('dashboard', function () {
     $today = now()->toDateString();
-    $monthStart = now()->startOfMonth()->toDateString();
-    $monthEnd = now()->endOfMonth()->toDateString();
-    $periodMonths = (int) request()->input('period', 6);              // 3 / 6 / 12
-    $periodStart = now()->subMonths($periodMonths - 1)->startOfMonth();
+    $periodWeeks = max(4, min(26, (int) request()->input('period', 12))); // 4–26 weeks
+    $perPage = max(5, min(50, (int) request()->input('per_page', 10)));
+    $page = max(1, (int) request()->input('page', 1));
 
-    // ── Room inventory ───────────────────────────────────────────────────────
-    $totalRooms = Room::count();
-    $maintenance = Room::where('status', 'maintenance')->count();
+    // ── Date windows ─────────────────────────────────────────────────────────
+    $thisMonthStart = now()->startOfMonth()->toDateString();
+    $thisMonthEnd = now()->endOfMonth()->toDateString();
+    $prevMonth = now()->subMonthNoOverflow();
+    $prevMonthStart = $prevMonth->copy()->startOfMonth()->toDateString();
+    $prevMonthEnd = $prevMonth->copy()->endOfMonth()->toDateString();
+    $weekStart = now()->subWeeks($periodWeeks - 1)->startOfWeek()->toDateString();
+
+    // ── BATCH 1: Room inventory (single query) ────────────────────────────────
+    $roomStats = Room::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'maintenance' THEN 1 ELSE 0 END) as maintenance
+        ")->first();
+
+    $totalRooms = (int) ($roomStats->total ?? 0);
+    $maintenance = (int) ($roomStats->maintenance ?? 0);
     $sellableRooms = max(1, $totalRooms - $maintenance);
 
-    // Occupied today (confirmed + checked-in overlapping today)
+    // Occupied today — rooms with active booking overlapping today
     $occupiedToday = Booking::whereIn('status', ['confirmed', 'checked_in'])
         ->where('check_in_date', '<=', $today)
         ->where('check_out_date', '>', $today)
@@ -40,102 +52,300 @@ Route::get('dashboard', function () {
         ->count('room_id');
 
     // ── Business Performance KPIs ────────────────────────────────────────────
-    // Occupancy Rate = occupied / sellable rooms * 100
-    $occupancyRate = round($occupiedToday / $sellableRooms * 100, 1);
-
-    // Monthly Revenue (paid/confirmed/checked-in bookings with check-in this month)
-    $monthlyRevenue = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
-        ->whereBetween('check_in_date', [$monthStart, $monthEnd])
-        ->sum('total_amount');
-
-    // ARR – Average Room Rate (revenue per sold room this month)
-    $soldRoomsThisMonth = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
-        ->whereBetween('check_in_date', [$monthStart, $monthEnd])
-        ->count();
-
-    $arr = $soldRoomsThisMonth > 0 ? round($monthlyRevenue / $soldRoomsThisMonth) : 0;
-
-    // RevPAR = Monthly Revenue / (sellable rooms × days in month)
     $daysInMonth = (int) now()->daysInMonth;
-    $revpar = round($monthlyRevenue / ($sellableRooms * $daysInMonth));
 
-    // ── Operational Snapshot ─────────────────────────────────────────────────
-    $pendingBookings = Booking::where('status', 'pending')->count();
-    $availableRooms = max(0, $sellableRooms - $occupiedToday);
+    $monthMetrics = function (string $start, string $end) {
+        $revenue = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
+            ->whereBetween('check_in_date', [$start, $end])->sum('total_amount');
+        $sold = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
+            ->whereBetween('check_in_date', [$start, $end])->count();
+        return ['revenue' => (float) $revenue, 'sold' => (int) $sold];
+    };
 
-    // ── Trendline: Revenue + Occupancy per month ─────────────────────────────
-    // Revenue per month
-    $revenueTrend = Booking::selectRaw("
-            DATE_FORMAT(check_in_date,'%b %Y') as month,
-            YEAR(check_in_date)  as year,
-            MONTH(check_in_date) as month_num,
-            COALESCE(SUM(total_amount),0) as revenue
-        ")
-        ->whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
-        ->where('check_in_date', '>=', $periodStart)
-        ->groupByRaw('year, month_num, month')
-        ->orderByRaw('year, month_num')
-        ->get();
+    $monthOccupancy = function (string $start, string $end, int $sellable) {
+        $roomNights = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
+            ->whereBetween('check_in_date', [$start, $end])
+            ->selectRaw('SUM(DATEDIFF(LEAST(check_out_date, ?), GREATEST(check_in_date, ?))) as rn', [$end, $start])
+            ->value('rn') ?? 0;
+        $daysInM = (int) \Carbon\Carbon::parse($start)->daysInMonth;
+        return $daysInM > 0 ? round((float) $roomNights / ($sellable * $daysInM) * 100, 1) : 0;
+    };
 
-    // Occupancy % per month — occupied-room-nights / (sellable × days_in_month)
-    $occupancyTrend = Booking::selectRaw("
-            DATE_FORMAT(check_in_date,'%b %Y') as month,
-            YEAR(check_in_date)  as year,
-            MONTH(check_in_date) as month_num,
-            COUNT(*) as booked,
-            SUM(DATEDIFF(LEAST(check_out_date, LAST_DAY(check_in_date) + INTERVAL 1 DAY), GREATEST(check_in_date, DATE_FORMAT(check_in_date,'%%Y-%%m-01')))) as room_nights
-        ")
-        ->whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
-        ->where('check_in_date', '>=', $periodStart)
-        ->groupByRaw('year, month_num, month')
-        ->orderByRaw('year, month_num')
-        ->get();
-
-    // Map occupancy trend to %
-    $trendMap = [];
-    foreach ($revenueTrend as $r) {
-        $key = $r->year . '-' . $r->month_num;
-        $trendMap[$key] = ['month' => $r->month, 'revenue' => (float) $r->revenue, 'occupancy' => 0];
-    }
-    foreach ($occupancyTrend as $o) {
-        $key = $o->year . '-' . $o->month_num;
-        $daysInM = cal_days_in_month(CAL_GREGORIAN, $o->month_num, $o->year);
-        $occ = round((float) $o->room_nights / ($sellableRooms * $daysInM) * 100, 1);
-        if (isset($trendMap[$key])) {
-            $trendMap[$key]['occupancy'] = $occ;
-        } else {
-            $trendMap[$key] = ['month' => $o->month, 'revenue' => 0, 'occupancy' => $occ];
+    $delta = function ($now, $prev): array {
+        if ($prev == 0) {
+            return ['pct' => $now > 0 ? 100.0 : 0.0, 'dir' => $now > 0 ? 'up' : 'neutral'];
         }
-    }
-    ksort($trendMap);
-    $chartData = array_values($trendMap);
+        $pct = round(($now - $prev) / $prev * 100, 1);
+        return ['pct' => abs($pct), 'dir' => $pct >= 0 ? 'up' : 'down'];
+    };
 
-    // ── Booking Source Split (Direct vs OTA) ─────────────────────────────────
-    $sourceCounts = Booking::selectRaw("
+    $thisM = $monthMetrics($thisMonthStart, $thisMonthEnd);
+    $prevM = $monthMetrics($prevMonthStart, $prevMonthEnd);
+
+    $thisRevenue  = $thisM['revenue'];
+    $prevRevenue  = $prevM['revenue'];
+    $thisARR      = $thisM['sold'] > 0 ? round($thisRevenue / $thisM['sold']) : 0;
+    $prevARR      = $prevM['sold'] > 0 ? round($prevRevenue / $prevM['sold']) : 0;
+    $prevDays     = (int) \Carbon\Carbon::parse($prevMonthStart)->daysInMonth;
+    $thisRevPAR   = round($thisRevenue / ($sellableRooms * $daysInMonth));
+    $prevRevPAR   = round($prevRevenue / ($sellableRooms * $prevDays));
+    $thisOccupancy = round($occupiedToday / $sellableRooms * 100, 1);
+    $prevOccupancy = $monthOccupancy($prevMonthStart, $prevMonthEnd, $sellableRooms);
+
+    $kpi = [
+        'occupancy_rate' => ['value' => $thisOccupancy, 'prev' => $prevOccupancy, ...$delta($thisOccupancy, $prevOccupancy)],
+        'monthly_revenue' => ['value' => $thisRevenue, 'prev' => $prevRevenue, ...$delta($thisRevenue, $prevRevenue)],
+        'arr' => ['value' => (float) $thisARR, 'prev' => (float) $prevARR, ...$delta($thisARR, $prevARR)],
+        'revpar' => ['value' => (float) $thisRevPAR, 'prev' => (float) $prevRevPAR, ...$delta($thisRevPAR, $prevRevPAR)],
+    ];
+
+    // ── BATCH 3: Ops snapshot ─────────────────────────────────────────────────
+    $pendingCount = Booking::where('status', 'pending')->count();
+    $ops = [
+        'total_rooms' => $totalRooms,
+        'available_rooms' => max(0, $sellableRooms - $occupiedToday),
+        'occupied_today' => $occupiedToday,
+        'maintenance' => $maintenance,
+        'pending_bookings' => $pendingCount,
+    ];
+
+    // ── BATCH 4: Channel revenue + all-time counts (single query, grouped) ────
+    $OTA_RATE = 0.15;
+
+    $channelAll = Booking::whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
+        ->selectRaw("
             booking_source,
-            COUNT(*) as cnt
-        ")
-        ->whereIn('status', ['confirmed', 'checked_in', 'checked_out'])
+            COUNT(*) AS cnt_all,
+            SUM(CASE WHEN check_in_date BETWEEN ? AND ? THEN total_amount ELSE 0 END) AS rev_month,
+            SUM(CASE WHEN check_in_date BETWEEN ? AND ? THEN 1 ELSE 0 END)            AS cnt_month
+        ", [$thisMonthStart, $thisMonthEnd, $thisMonthStart, $thisMonthEnd])
         ->groupBy('booking_source')
         ->get()
         ->keyBy('booking_source');
 
-    $totalConfirmed = max(1, $sourceCounts->sum('cnt'));
-    $directCount = (int) ($sourceCounts->get('direct')?->cnt ?? 0)
-        + (int) ($sourceCounts->get('walk_in')?->cnt ?? 0);
-    $otaCount = (int) ($sourceCounts->get('ota')?->cnt ?? 0);
-    $otherCount = $totalConfirmed - $directCount - $otaCount;
+    $directRevM = (float) (($channelAll->get('direct')?->rev_month ?? 0) + ($channelAll->get('walk_in')?->rev_month ?? 0));
+    $otaRevM = (float) ($channelAll->get('ota')?->rev_month ?? 0);
+    $otherRevM = (float) $channelAll->filter(fn($r) => !in_array($r->booking_source, ['direct', 'walk_in', 'ota']))->sum('rev_month');
+    $totalRevM = max(1, $directRevM + $otaRevM + $otherRevM);
 
-    $bookingSourceSplit = [
-        ['source' => 'Direct / Walk-in', 'count' => $directCount, 'pct' => round($directCount / $totalConfirmed * 100, 1)],
-        ['source' => 'OTA', 'count' => $otaCount, 'pct' => round($otaCount / $totalConfirmed * 100, 1)],
-        ['source' => 'Other', 'count' => $otherCount, 'pct' => round($otherCount / $totalConfirmed * 100, 1)],
+    $allTotal = max(1, $channelAll->sum('cnt_all'));
+    $directCnt = (int) (($channelAll->get('direct')?->cnt_all ?? 0) + ($channelAll->get('walk_in')?->cnt_all ?? 0));
+    $otaCnt = (int) ($channelAll->get('ota')?->cnt_all ?? 0);
+    $otherCnt = $allTotal - $directCnt - $otaCnt;
+
+    $otaCommission = round($otaRevM * $OTA_RATE);
+    $netRevenue = round($thisRevenue - $otaCommission);
+
+    $channelData = [
+        [
+            'source' => 'Direct / Walk-in',
+            'revenue' => $directRevM,
+            'count' => $directCnt,
+            'rev_pct' => round($directRevM / $totalRevM * 100, 1),
+            'cnt_pct' => round($directCnt / $allTotal * 100, 1),
+            'commission' => 0
+        ],
+        [
+            'source' => 'OTA',
+            'revenue' => $otaRevM,
+            'count' => $otaCnt,
+            'rev_pct' => round($otaRevM / $totalRevM * 100, 1),
+            'cnt_pct' => round($otaCnt / $allTotal * 100, 1),
+            'commission' => $otaCommission
+        ],
+        [
+            'source' => 'Other',
+            'revenue' => $otherRevM,
+            'count' => $otherCnt,
+            'rev_pct' => round($otherRevM / $totalRevM * 100, 1),
+            'cnt_pct' => round($otherCnt / $allTotal * 100, 1),
+            'commission' => 0
+        ],
     ];
 
-    // ── Recent Bookings ───────────────────────────────────────────────────────
-    $recentBookings = Booking::with('room:id,room_number,room_type_id', 'room.roomType:id,name')
-        ->latest()->limit(5)
-        ->get(['id', 'room_id', 'guest_name', 'guest_email', 'check_in_date', 'check_out_date', 'status', 'total_amount', 'booking_source'])
+    $commissionSummary = [
+        'ota_revenue' => $otaRevM,
+        'commission_rate' => $OTA_RATE * 100,
+        'ota_commission' => (float) $otaCommission,
+        'net_revenue' => (float) $netRevenue,
+        'gross_revenue' => $thisRevenue,
+    ];
+
+    // ── BATCH 5: Cancellation (single query, 2 passes in PHP) ────────────────
+    $cancelStats = Booking::selectRaw("
+            booking_source,
+            COUNT(*) AS total,
+            SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END) AS cancelled
+        ")
+        ->where('check_in_date', '>=', now()->subMonths(6)->startOfMonth())
+        ->groupBy('booking_source')
+        ->get();
+
+    $totalBookings = (int) $cancelStats->sum('total');
+    $totalCancelled = (int) $cancelStats->sum('cancelled');
+    $cancelRate = $totalBookings > 0 ? round($totalCancelled / $totalBookings * 100, 1) : 0;
+    $cancelByChannel = $cancelStats->map(fn($r) => [
+        'source' => $r->booking_source,
+        'total' => (int) $r->total,
+        'cancelled' => (int) $r->cancelled,
+        'rate' => $r->total > 0 ? round($r->cancelled / $r->total * 100, 1) : 0,
+    ])->values();
+
+    // ── BATCH 6: Weekly chart data (revenue + occupancy + cancel, ONE query) ─
+    $weeklyRaw = Booking::selectRaw("
+            YEARWEEK(check_in_date, 1)                                          AS yw,
+            MIN(DATE_FORMAT(check_in_date,'%d/%m'))                            AS week_label,
+            COALESCE(SUM(CASE WHEN status IN ('confirmed','checked_in','checked_out') THEN total_amount  ELSE 0 END),0) AS revenue,
+            COALESCE(SUM(CASE WHEN status IN ('confirmed','checked_in','checked_out') THEN DATEDIFF(LEAST(check_out_date, ADDDATE(STR_TO_DATE(CONCAT(YEARWEEK(check_in_date,1),'Monday'),'%%X%%V%%W'), INTERVAL 6 DAY)), GREATEST(check_in_date, STR_TO_DATE(CONCAT(YEARWEEK(check_in_date,1),'Monday'),'%%X%%V%%W'))) ELSE 0 END),0) AS room_nights,
+            COUNT(*)                                                            AS total_bookings,
+            COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0)   AS cancelled
+        ")
+        ->where('check_in_date', '>=', $weekStart)
+        ->groupByRaw('yw')
+        ->orderBy('yw')
+        ->get();
+
+    // Simplified week label approach — cleaner and avoids MySQL date-string quirks
+    $weeklyData = Booking::selectRaw("
+            YEARWEEK(check_in_date, 1)                                                AS yw,
+            DATE_FORMAT(MIN(check_in_date),'Wk %%u')                                 AS week_label,
+            COALESCE(SUM(CASE WHEN status IN ('confirmed','checked_in','checked_out') THEN total_amount ELSE 0 END),0) AS revenue,
+            COUNT(*)                                                                   AS total_bookings,
+            COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0)          AS cancelled
+        ")
+        ->where('check_in_date', '>=', $weekStart)
+        ->groupByRaw('YEARWEEK(check_in_date, 1)')
+        ->orderByRaw('YEARWEEK(check_in_date, 1)')
+        ->get()
+        ->map(function ($r) use ($sellableRooms) {
+            $occ = $sellableRooms * 7 > 0
+                ? round(min((int) $r->total_bookings / ($sellableRooms * 7) * 100, 100), 1)
+                : 0;
+            $cancelRate = $r->total_bookings > 0
+                ? round($r->cancelled / $r->total_bookings * 100, 1)
+                : 0;
+            return [
+                'week' => $r->week_label,
+                'revenue' => (float) $r->revenue,
+                'occupancy' => $occ,
+                'cancel_rate' => $cancelRate,
+                'bookings' => (int) $r->total_bookings,
+                'cancelled' => (int) $r->cancelled,
+            ];
+        });
+
+    // Cancellation weekly trend (reuse weeklyData)
+    $cancellationData = [
+        'total_bookings' => $totalBookings,
+        'total_cancelled' => $totalCancelled,
+        'cancel_rate' => $cancelRate,
+        'by_channel' => $cancelByChannel,
+        'trend' => $weeklyData->map(fn($w) => [
+            'month' => $w['week'],
+            'total' => $w['bookings'],
+            'cancelled' => $w['cancelled'],
+            'cancel_rate' => $w['cancel_rate'],
+        ]),
+    ];
+
+    // ── Rule-Based Performance Insights ──────────────────────────────────────
+    $insights = [];
+    $otaPct = round($otaCnt / $allTotal * 100, 1);
+    $revDelta = $kpi['monthly_revenue'];
+    $arrDelta = $kpi['arr'];
+
+    if ($thisOccupancy < 40) {
+        $insights[] = [
+            'level' => 'warning',
+            'icon' => '🏚️',
+            'title' => 'insight.occ_low_title',
+            'message' => "insight.occ_low_msg:{$thisOccupancy}"
+        ];
+    } elseif ($thisOccupancy >= 85) {
+        $insights[] = [
+            'level' => 'success',
+            'icon' => '🔥',
+            'title' => 'insight.occ_high_title',
+            'message' => "insight.occ_high_msg:{$thisOccupancy}"
+        ];
+    }
+    if ($otaPct > 50) {
+        $annualComm = round($otaCommission * 12);
+        $insights[] = [
+            'level' => 'warning',
+            'icon' => '📡',
+            'title' => 'insight.ota_dep_title',
+            'message' => "insight.ota_dep_msg:{$otaPct}:{$otaCommission}:{$annualComm}"
+        ];
+    } elseif ($directCnt / $allTotal > 0.5) {
+        $directPct = round($directCnt / $allTotal * 100, 1);
+        $insights[] = [
+            'level' => 'success',
+            'icon' => '🎯',
+            'title' => 'insight.direct_title',
+            'message' => "insight.direct_msg:{$directPct}"
+        ];
+    }
+    if ($revDelta['dir'] === 'down' && $revDelta['pct'] > 10) {
+        $insights[] = [
+            'level' => 'error',
+            'icon' => '📉',
+            'title' => 'insight.rev_drop_title',
+            'message' => "insight.rev_drop_msg:{$revDelta['pct']}"
+        ];
+    } elseif ($revDelta['dir'] === 'up' && $revDelta['pct'] > 15) {
+        $insights[] = [
+            'level' => 'success',
+            'icon' => '🚀',
+            'title' => 'insight.rev_grow_title',
+            'message' => "insight.rev_grow_msg:{$revDelta['pct']}"
+        ];
+    }
+    if ($cancelRate > 20) {
+        $insights[] = [
+            'level' => 'error',
+            'icon' => '❌',
+            'title' => 'insight.cancel_high_title',
+            'message' => "insight.cancel_high_msg:{$cancelRate}"
+        ];
+    } elseif ($cancelRate > 10) {
+        $insights[] = [
+            'level' => 'warning',
+            'icon' => '⚠️',
+            'title' => 'insight.cancel_mid_title',
+            'message' => "insight.cancel_mid_msg:{$cancelRate}"
+        ];
+    }
+    if ($arrDelta['dir'] === 'down' && $arrDelta['pct'] > 5) {
+        $insights[] = [
+            'level' => 'info',
+            'icon' => '🏷️',
+            'title' => 'insight.arr_drop_title',
+            'message' => "insight.arr_drop_msg:{$arrDelta['pct']}"
+        ];
+    }
+    if (empty($insights)) {
+        $insights[] = [
+            'level' => 'success',
+            'icon' => '✅',
+            'title' => 'insight.normal_title',
+            'message' => 'insight.normal_msg'
+        ];
+    }
+
+    // ── BATCH 7: Recent bookings with pagination ───────────────────────────────
+    $bookingQuery = Booking::with([
+        'room:id,room_number,room_type_id',
+        'room.roomType:id,name',
+    ])
+        ->latest()
+        ->select(['id', 'room_id', 'guest_name', 'guest_email', 'check_in_date', 'check_out_date', 'status', 'total_amount', 'booking_source']);
+
+    $totalBookingCount = $bookingQuery->count();
+    $recentBookings = $bookingQuery
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get()
         ->map(fn($b) => [
             'id' => $b->id,
             'guest_name' => $b->guest_name,
@@ -151,30 +361,25 @@ Route::get('dashboard', function () {
         ]);
 
     return Inertia::render('dashboard', [
-        // Section 1 – Business Performance
-        'kpi' => [
-            'occupancy_rate' => $occupancyRate,
-            'monthly_revenue' => (float) $monthlyRevenue,
-            'arr' => (float) $arr,
-            'revpar' => (float) $revpar,
-        ],
-        // Section 2 – Operational Snapshot
-        'ops' => [
-            'total_rooms' => $totalRooms,
-            'available_rooms' => $availableRooms,
-            'occupied_today' => $occupiedToday,
-            'maintenance' => $maintenance,
-            'pending_bookings' => $pendingBookings,
-        ],
-        // Charts
-        'chartData' => $chartData,
-        'period' => $periodMonths,
-        // Strategic Block
-        'bookingSourceSplit' => $bookingSourceSplit,
-        // Recent Activity
+        'kpi' => $kpi,
+        'ops' => $ops,
+        'channelData' => $channelData,
+        'commissionSummary' => $commissionSummary,
+        'cancellationData' => $cancellationData,
+        'insights' => $insights,
+        'chartData' => $weeklyData->values(),
+        'periodWeeks' => $periodWeeks,
         'recentBookings' => $recentBookings,
+        'pagination' => [
+            'total' => $totalBookingCount,
+            'per_page' => $perPage,
+            'page' => $page,
+            'last_page' => (int) ceil($totalBookingCount / $perPage),
+        ],
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
 
 
 // ── Bookings + Rooms + Calendar + Guests + Payments + Housekeeping (admin+) ─
