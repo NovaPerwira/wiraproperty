@@ -233,6 +233,18 @@ export default function App(): JSX.Element {
             transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
             className="bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] p-3 md:p-4 flex flex-col md:flex-row items-center gap-3 border border-gray-100"
           >
+            {/* Input Lokasi Interaktif */}
+            <motion.div 
+              whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 w-full flex items-center gap-4 px-6 py-4 bg-[#f9f9f9] transition-colors rounded-2xl cursor-text"
+            >
+              <MapPin className="text-[#5a5a4a]" size={22} />
+              <div className="flex flex-col w-full">
+                <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">Lokasi</span>
+                <input type="text" placeholder="Ke mana Anda akan pergi?" className="bg-transparent text-[15px] font-medium text-[#1a1a1a] outline-none placeholder:text-[#1a1a1a]/50 w-full" />
+              </div>
+            </motion.div>
 
             {/* Input Tanggal Interaktif */}
             <motion.div 
@@ -242,31 +254,8 @@ export default function App(): JSX.Element {
             >
               <Calendar className="text-[#5a5a4a]" size={22} />
               <div className="flex flex-col w-full">
-                <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">checkin</span>
+                <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">Tanggal</span>
                 <span className="text-[15px] font-medium text-[#1a1a1a]">Pilih tanggal</span>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 w-full flex items-center gap-4 px-6 py-4 bg-[#f9f9f9] transition-colors rounded-2xl cursor-pointer"
-            >
-              <Calendar className="text-[#5a5a4a]" size={22} />
-              <div className="flex flex-col w-full">
-                <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">checkout</span>
-                <span className="text-[15px] font-medium text-[#1a1a1a]">Pilih tanggal</span>
-              </div>
-            </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 w-full flex items-center gap-4 px-6 py-4 bg-[#f9f9f9] transition-colors rounded-2xl cursor-pointer"
-            >
-              <Calendar className="text-[#5a5a4a]" size={22} />
-              <div className="flex flex-col w-full">
-                <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">Guest</span>
-                <span className="text-[15px] font-medium text-[#1a1a1a]">1 person</span>
               </div>
             </motion.div>
 
