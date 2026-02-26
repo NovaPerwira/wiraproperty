@@ -36,7 +36,7 @@ class BookingController extends Controller
             $query->where('check_in_date', '<=', $to);
         }
 
-        $bookings = $query->paginate(15)->withQueryString()
+        $bookings = $query->paginate(10)->withQueryString()
             ->through(fn($b) => [
                 'id' => $b->id,
                 'guest_name' => $b->guest_name,

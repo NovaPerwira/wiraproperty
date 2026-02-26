@@ -34,7 +34,7 @@ class GuestController extends Controller
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
-        $guests = $query->paginate(20)->withQueryString()
+        $guests = $query->paginate(10)->withQueryString()
             ->through(fn($g) => [
                 'id' => $g->id,
                 'name' => $g->name,

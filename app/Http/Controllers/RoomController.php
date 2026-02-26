@@ -17,24 +17,24 @@ class RoomController extends Controller
         $rooms = Room::with('roomType')
             ->orderBy('floor')
             ->orderBy('room_number')
-            ->get()
-            ->map(function (Room $room) {
-                return [
-                    'id' => $room->id,
-                    'room_number' => $room->room_number,
-                    'floor' => $room->floor,
-                    'status' => $room->status,          // physical
-                    'display_status' => $room->display_status,  // dynamic (available/occupied/maintenance)
-                    'notes' => $room->notes,
-                    'room_type' => [
-                        'id' => $room->roomType->id,
-                        'name' => $room->roomType->name,
-                        'base_price' => $room->roomType->base_price,
-                        'capacity' => $room->roomType->capacity,
-                        'amenities' => $room->roomType->amenities,
-                    ],
-                ];
-            });
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn(Room $room) => [
+                'id' => $room->id,
+                'room_number' => $room->room_number,
+                'floor' => $room->floor,
+                'status' => $room->status,          // physical
+                'display_status' => $room->display_status,  // dynamic (available/occupied/maintenance)
+                'notes' => $room->notes,
+                'room_type_id' => $room->room_type_id,
+                'room_type' => [
+                    'id' => $room->roomType->id,
+                    'name' => $room->roomType->name,
+                    'base_price' => $room->roomType->base_price,
+                    'capacity' => $room->roomType->capacity,
+                    'amenities' => $room->roomType->amenities,
+                ],
+            ]);
 
         $roomTypes = RoomType::orderBy('base_price')->get(['id', 'name', 'base_price', 'capacity', 'amenities']);
 
@@ -55,7 +55,10 @@ class RoomController extends Controller
     public function update(Request $request, Room $room): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:available,maintenance'],
+            'room_type_id' => ['sometimes', 'exists:room_types,id'],
+            'room_number' => ['sometimes', 'string', 'max:50'],
+            'floor' => ['sometimes', 'integer', 'min:1'],
+            'status' => ['sometimes', 'in:available,maintenance'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 

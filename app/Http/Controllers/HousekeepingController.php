@@ -21,8 +21,8 @@ class HousekeepingController extends Controller
             ->whereDate('scheduled_for', $date)
             ->orderBy('priority', 'desc') // urgent first
             ->orderBy('room_id')
-            ->get()
-            ->map(fn($t) => [
+            ->paginate(10)->withQueryString()
+            ->through(fn($t) => [
                 'id' => $t->id,
                 'room_id' => $t->room_id,
                 'room_number' => $t->room?->room_number,
@@ -41,12 +41,13 @@ class HousekeepingController extends Controller
                 'scheduled_for' => $t->scheduled_for?->format('Y-m-d'),
             ]);
 
-        // Board summary counts
+        // Board summary counts (need to execute a subquery off the base since $tasks is now paginated)
+        $baseQuery = HousekeepingTask::whereDate('scheduled_for', $date);
         $summary = [
-            'needs_cleaning' => $tasks->whereIn('task_type', ['cleaning', 'turndown'])->whereIn('status', ['pending', 'in_progress'])->count(),
-            'ready' => $tasks->where('status', 'done')->count(),
-            'maintenance' => $tasks->where('task_type', 'maintenance')->whereIn('status', ['pending', 'in_progress'])->count(),
-            'skipped' => $tasks->where('status', 'skipped')->count(),
+            'needs_cleaning' => (clone $baseQuery)->whereIn('task_type', ['cleaning', 'turndown'])->whereIn('status', ['pending', 'in_progress'])->count(),
+            'ready' => (clone $baseQuery)->where('status', 'done')->count(),
+            'maintenance' => (clone $baseQuery)->where('task_type', 'maintenance')->whereIn('status', ['pending', 'in_progress'])->count(),
+            'skipped' => (clone $baseQuery)->where('status', 'skipped')->count(),
         ];
 
         // Available staff for assignment

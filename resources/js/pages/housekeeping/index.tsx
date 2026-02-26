@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 
@@ -35,7 +35,10 @@ interface Staff {
 
 interface PageProps {
     [key: string]: unknown;
-    tasks: Task[];
+    tasks: {
+        data: Task[];
+        links: { url: string | null; label: string; active: boolean }[];
+    };
     summary: Summary;
     staff: Staff[];
     date: string;
@@ -279,7 +282,7 @@ export default function HousekeepingIndex() {
                 {/* Kanban Board */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {columns.map((col) => {
-                        const colTasks = tasks.filter(col.filter);
+                        const colTasks = tasks.data.filter(col.filter);
                         return (
                             <div key={col.key} className={`rounded-2xl border ${col.headerColor} overflow-hidden`}>
                                 <div className={`border-b ${col.headerColor} px-4 py-2.5`}>
@@ -299,6 +302,25 @@ export default function HousekeepingIndex() {
                         );
                     })}
                 </div>
+
+                {/* Pagination */}
+                {tasks.links && tasks.links.length > 3 && (
+                    <div className="mt-6 flex flex-wrap justify-center gap-1 pb-4">
+                        {tasks.links.map((link, i) => (
+                            <Link
+                                key={i}
+                                href={link.url || '#'}
+                                className={`px-3 py-1.5 text-sm rounded-lg border ${link.active
+                                    ? 'bg-rose-600 text-white border-rose-600'
+                                    : link.url
+                                        ? 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700'
+                                        : 'bg-neutral-900 text-neutral-600 border-neutral-800 cursor-not-allowed'
+                                    }`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

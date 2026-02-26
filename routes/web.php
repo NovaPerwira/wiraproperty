@@ -8,6 +8,9 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PageController; // Added this line
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -17,6 +20,17 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
+
+// Fronted Pages Routes
+Route::get('/stays', [PageController::class, 'stays'])->name('page.stays');
+Route::get('/experience', [PageController::class, 'experience'])->name('page.experience');
+Route::get('/dining', [PageController::class, 'dining'])->name('page.dining');
+Route::get('/about', [PageController::class, 'about'])->name('page.about');
+
+Route::get('/search-rooms', [SearchController::class, 'index'])->name('search.index');
+
+Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.index');
+Route::post('/booking', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:5,1');
 
 // ── Dashboard — Hotel Performance Intelligence ─────────────────────────────
 Route::get('dashboard', function () {
@@ -82,13 +96,13 @@ Route::get('dashboard', function () {
     $thisM = $monthMetrics($thisMonthStart, $thisMonthEnd);
     $prevM = $monthMetrics($prevMonthStart, $prevMonthEnd);
 
-    $thisRevenue  = $thisM['revenue'];
-    $prevRevenue  = $prevM['revenue'];
-    $thisARR      = $thisM['sold'] > 0 ? round($thisRevenue / $thisM['sold']) : 0;
-    $prevARR      = $prevM['sold'] > 0 ? round($prevRevenue / $prevM['sold']) : 0;
-    $prevDays     = (int) \Carbon\Carbon::parse($prevMonthStart)->daysInMonth;
-    $thisRevPAR   = round($thisRevenue / ($sellableRooms * $daysInMonth));
-    $prevRevPAR   = round($prevRevenue / ($sellableRooms * $prevDays));
+    $thisRevenue = $thisM['revenue'];
+    $prevRevenue = $prevM['revenue'];
+    $thisARR = $thisM['sold'] > 0 ? round($thisRevenue / $thisM['sold']) : 0;
+    $prevARR = $prevM['sold'] > 0 ? round($prevRevenue / $prevM['sold']) : 0;
+    $prevDays = (int) \Carbon\Carbon::parse($prevMonthStart)->daysInMonth;
+    $thisRevPAR = round($thisRevenue / ($sellableRooms * $daysInMonth));
+    $prevRevPAR = round($prevRevenue / ($sellableRooms * $prevDays));
     $thisOccupancy = round($occupiedToday / $sellableRooms * 100, 1);
     $prevOccupancy = $monthOccupancy($prevMonthStart, $prevMonthEnd, $sellableRooms);
 

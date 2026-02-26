@@ -30,7 +30,7 @@ class PaymentController extends Controller
             $query->whereDate('paid_at', '<=', $to);
         }
 
-        $payments = $query->paginate(20)->withQueryString()
+        $payments = $query->paginate(10)->withQueryString()
             ->through(fn($p) => [
                 'id' => $p->id,
                 'booking_id' => $p->booking_id,
