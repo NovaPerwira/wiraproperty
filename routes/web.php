@@ -33,7 +33,7 @@ Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.i
 Route::post('/booking', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:5,1');
 
 // ── Dashboard — Hotel Performance Intelligence ─────────────────────────────
-Route::middleware(['web', 'auth', 'admin'])->get('/admin/dashboard', function () {
+Route::middleware(['web', 'admin'])->get('/admin/dashboard', function () {
     $today = now()->toDateString();
     $periodWeeks = max(4, min(26, (int) request()->input('period', 12))); // 4–26 weeks
     $perPage = max(5, min(50, (int) request()->input('per_page', 10)));
@@ -405,7 +405,7 @@ Route::middleware(['web'])->prefix('admin')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'login'])
         ->middleware('throttle:5,1');
 
-    Route::middleware(['auth', 'admin'])->group(function () {
+    Route::middleware(['admin'])->group(function () {
 
         Route::resource('rooms', RoomController::class);
         Route::resource('bookings', BookingController::class);
