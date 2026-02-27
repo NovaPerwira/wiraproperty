@@ -145,11 +145,11 @@ export default function Dashboard() {
 
     const changePeriod = (p: number) => {
         setActivePeriod(p);
-        router.get('/dashboard', { period: p }, { preserveState: true, replace: true });
+        router.get('/admin/dashboard', { period: p }, { preserveState: true, replace: true });
     };
 
     const changePage = (p: number) => {
-        router.get('/dashboard', { page: p, period: activePeriod }, { preserveState: true, replace: true });
+        router.get('/admin/dashboard', { page: p, period: activePeriod }, { preserveState: true, replace: true });
     };
 
     const monthLabel = new Date().toLocaleString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' });
@@ -298,7 +298,7 @@ export default function Dashboard() {
                                 <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
                                 <XAxis dataKey="week" tick={{ fontSize: 11 }} />
                                 <YAxis yAxisId="val" tickFormatter={(v) => activeChart === 'revenue' ? fmtK(v) : `${v}%`} tick={{ fontSize: 11 }} width={55} />
-                                <Tooltip formatter={(v: number) => activeChart === 'revenue' ? fmt(v) : `${v}%`} />
+                                <Tooltip formatter={(v?: number) => activeChart === 'revenue' ? fmt(v ?? 0) : `${v ?? 0}%`} />
                                 <Area yAxisId="val" type="monotone"
                                     dataKey={activeChart === 'revenue' ? 'revenue' : activeChart === 'occupancy' ? 'occupancy' : 'cancel_rate'}
                                     name={activeChart === 'revenue' ? t('chart.revenue') : activeChart === 'occupancy' ? t('kpi.occupancy') : t('cancel.rate')}
@@ -428,7 +428,7 @@ export default function Dashboard() {
                 <div className="rounded-2xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-sidebar overflow-hidden">
                     <div className="flex items-center justify-between border-b border-sidebar-border/50 px-6 py-4">
                         <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('section.recent')}</h2>
-                        <Link href="/bookings" className="text-sm font-medium text-primary hover:underline">{t('table.view_all')}</Link>
+                        <Link href="/admin/bookings" className="text-sm font-medium text-primary hover:underline">{t('table.view_all')}</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">

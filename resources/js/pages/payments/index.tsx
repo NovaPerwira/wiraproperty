@@ -83,12 +83,12 @@ export default function PaymentsIndex() {
     });
 
     const applyFilters = () => {
-        router.get('/payments', { status: statusF, method: methodF, date_from: dateFrom, date_to: dateTo }, { preserveState: true, replace: true });
+        router.get('/admin/payments', { status: statusF, method: methodF, date_from: dateFrom, date_to: dateTo }, { preserveState: true, replace: true });
     };
 
     const submitPayment = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/payments', form as unknown as Record<string, string>, {
+        router.post('/admin/payments', form as unknown as Record<string, string>, {
             onSuccess: () => { setShowAdd(false); setForm({ booking_id: '', amount: '', payment_method: 'transfer', payment_status: 'paid', reference_number: '', notes: '' }); },
         });
     };

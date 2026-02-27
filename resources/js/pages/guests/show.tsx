@@ -36,6 +36,7 @@ interface PageProps {
     guest: GuestDetail;
     bookings: StayRecord[];
     flash?: { success?: string };
+    [key: string]: unknown;
 }
 
 const formatIDR = (n: number) =>
@@ -69,7 +70,7 @@ export default function GuestShow() {
     const [blacklistReason, setBlacklistReason] = useState(guest.blacklist_reason ?? '');
 
     const saveNotes = () => {
-        router.patch(`/guests/${guest.id}`, { notes }, {
+        router.patch(`/admin/guests/${guest.id}`, { notes }, {
             preserveState: true,
             onSuccess: () => { setNoteSaved(true); setTimeout(() => setNoteSaved(false), 2000); },
         });
@@ -77,10 +78,10 @@ export default function GuestShow() {
 
     const toggleBlacklist = () => {
         if (guest.is_blacklisted) {
-            router.patch(`/guests/${guest.id}`, { is_blacklisted: false, blacklist_reason: null }, { preserveState: false });
+            router.patch(`/admin/guests/${guest.id}`, { is_blacklisted: false, blacklist_reason: null }, { preserveState: false });
         } else {
             if (!blacklistReason.trim()) return alert('Masukkan alasan blacklist');
-            router.patch(`/guests/${guest.id}`, { is_blacklisted: true, blacklist_reason: blacklistReason }, { preserveState: false });
+            router.patch(`/admin/guests/${guest.id}`, { is_blacklisted: true, blacklist_reason: blacklistReason }, { preserveState: false });
         }
     };
 

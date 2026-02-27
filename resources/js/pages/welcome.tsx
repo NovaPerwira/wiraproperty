@@ -218,21 +218,83 @@ export default function App() {
             </motion.p>
 
             {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={!isLoading ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-6"
-            >
-              <button className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium tracking-wide hover:bg-white hover:text-black transition-all duration-500 ease-out flex items-center justify-center gap-2 group">
-                Book Your Stay
-              </button>
+            <div className="relative z-30 max-w-[1000px] mx-auto px-6">
+              <form
+                onSubmit={submitForm}
+                className="bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] p-3 md:p-4 flex flex-col md:flex-row items-center gap-3 border border-gray-100 relative"
+              >
 
-              <button className="w-full sm:w-auto px-8 py-4 rounded-full text-white/80 font-medium tracking-wide hover:text-white transition-all duration-500 ease-out flex items-center justify-center gap-2 group">
-                Explore Rooms
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </motion.div>
+                {/* Input Tanggal Interaktif */}
+                <motion.div
+                  whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+                  className="flex-1 w-full flex items-center gap-4 px-6 py-3 bg-[#f9f9f9] transition-colors rounded-2xl"
+                >
+                  <Calendar className="text-[#5a5a4a]" size={22} />
+                  <div className="flex flex-col w-full relative">
+                    <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">checkin</span>
+                    <input
+                      type="date"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      value={data.checkin}
+                      onChange={e => setData('checkin', e.target.value)}
+                      className="bg-transparent border-none p-0 focus:ring-0 text-[15px] font-medium text-[#1a1a1a] w-full outline-none"
+                    />
+                    {errors.checkin && <span className="absolute top-12 left-0 text-red-500 text-xs">{errors.checkin}</span>}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+                  className="flex-1 w-full flex items-center gap-4 px-6 py-3 bg-[#f9f9f9] transition-colors rounded-2xl"
+                >
+                  <Calendar className="text-[#5a5a4a]" size={22} />
+                  <div className="flex flex-col w-full relative">
+                    <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">checkout</span>
+                    <input
+                      type="date"
+                      required
+                      min={data.checkin || new Date().toISOString().split('T')[0]}
+                      value={data.checkout}
+                      onChange={e => setData('checkout', e.target.value)}
+                      className="bg-transparent border-none p-0 focus:ring-0 text-[15px] font-medium text-[#1a1a1a] w-full outline-none"
+                    />
+                    {errors.checkout && <span className="absolute top-12 left-0 text-red-500 text-xs">{errors.checkout}</span>}
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+                  className="flex-1 w-full flex items-center gap-4 px-6 py-3 bg-[#f9f9f9] transition-colors rounded-2xl"
+                >
+                  <Users className="text-[#5a5a4a]" size={22} />
+                  <div className="flex flex-col w-full relative">
+                    <span className="text-[11px] font-medium text-[#8c8c8c] uppercase tracking-wider">Guest</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      required
+                      value={data.guests}
+                      onChange={e => setData('guests', parseInt(e.target.value) || 1)}
+                      className="bg-transparent border-none p-0 focus:ring-0 text-[15px] font-medium text-[#1a1a1a] w-full outline-none"
+                    />
+                    {errors.guests && <span className="absolute top-12 left-0 text-red-500 text-xs">{errors.guests}</span>}
+                  </div>
+                </motion.div>
+
+                <motion.button
+                  type="submit"
+                  disabled={processing}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full md:w-auto bg-[#121212] hover:bg-black text-white px-10 py-5 rounded-2xl flex items-center justify-center gap-2 shadow-md transition-colors disabled:opacity-50"
+                >
+                  <Search size={20} />
+                  <span className="font-medium">Cari</span>
+                </motion.button>
+              </form>
+            </div>
           </motion.div>
 
 

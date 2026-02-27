@@ -59,7 +59,7 @@ export default function RoomsIndex({ rooms, roomTypes }: Props) {
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/rooms', { onSuccess: () => { reset(); setShowCreate(false); } });
+        post('/admin/rooms', { onSuccess: () => { reset(); setShowCreate(false); } });
     };
 
     const handleEditClick = (r: Room) => {
@@ -85,12 +85,12 @@ export default function RoomsIndex({ rooms, roomTypes }: Props) {
     };
 
     const handleStatusChange = (roomId: number, status: string, notes: string) => {
-        router.patch(`/rooms/${roomId}`, { status, notes });
+        router.patch(`/admin/rooms/${roomId}`, { status, notes });
     };
 
     const handleDelete = (roomId: number, num: string) => {
         if (!confirm(`Delete room #${num}?`)) return;
-        router.delete(`/rooms/${roomId}`);
+        router.delete(`/admin/rooms/${roomId}`);
     };
 
     // Group rooms by floor using the current paginated page
@@ -347,10 +347,10 @@ export default function RoomsIndex({ rooms, roomTypes }: Props) {
                                 key={i}
                                 href={link.url || '#'}
                                 className={`px-3 py-1.5 text-sm rounded-lg border ${link.active
-                                        ? 'bg-primary text-primary-foreground border-primary'
-                                        : link.url
-                                            ? 'bg-background hover:bg-muted border-border'
-                                            : 'bg-muted/50 text-muted-foreground border-border cursor-not-allowed'
+                                    ? 'bg-primary text-primary-foreground border-primary'
+                                    : link.url
+                                        ? 'bg-background hover:bg-muted border-border'
+                                        : 'bg-muted/50 text-muted-foreground border-border cursor-not-allowed'
                                     }`}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />

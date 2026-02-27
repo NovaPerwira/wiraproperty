@@ -34,6 +34,7 @@ interface PageProps {
     stats: Stats;
     filters: Record<string, string>;
     flash?: { success?: string };
+    [key: string]: unknown;
 }
 
 const formatIDR = (n: number) =>
@@ -45,12 +46,12 @@ export default function GuestsIndex() {
     const [blacklisted, setBlacklisted] = useState(filters.blacklisted ?? '');
 
     const applyFilters = () => {
-        router.get('/guests', { search, blacklisted }, { preserveState: true, replace: true });
+        router.get('/admin/guests', { search, blacklisted }, { preserveState: true, replace: true });
     };
 
     const handleSort = (col: string) => {
         const newDir = filters.sort === col && filters.dir === 'asc' ? 'desc' : 'asc';
-        router.get('/guests', { ...filters, sort: col, dir: newDir }, { preserveState: true, replace: true });
+        router.get('/admin/guests', { ...filters, sort: col, dir: newDir }, { preserveState: true, replace: true });
     };
 
     const SortIcon = ({ col }: { col: string }) => {
@@ -107,7 +108,7 @@ export default function GuestsIndex() {
                     />
                     <select
                         value={blacklisted}
-                        onChange={(e) => { setBlacklisted(e.target.value); router.get('/guests', { ...filters, blacklisted: e.target.value, search }, { preserveState: true, replace: true }); }}
+                        onChange={(e) => { setBlacklisted(e.target.value); router.get('/admin/guests', { ...filters, blacklisted: e.target.value, search }, { preserveState: true, replace: true }); }}
                         className="rounded-xl border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
                     >
                         <option value="">Semua Status</option>
@@ -201,10 +202,10 @@ export default function GuestsIndex() {
                                         onClick={() => link.url && router.get(link.url)}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         className={`rounded-lg px-3 py-1 text-xs transition-colors ${link.active
-                                                ? 'bg-indigo-600 text-white'
-                                                : link.url
-                                                    ? 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
-                                                    : 'cursor-not-allowed text-neutral-600'
+                                            ? 'bg-indigo-600 text-white'
+                                            : link.url
+                                                ? 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                                                : 'cursor-not-allowed text-neutral-600'
                                             }`}
                                     />
                                 ))}

@@ -4,8 +4,8 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Calendar', href: '/calendar' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
+    { title: 'Calendar', href: '/admin/calendar' },
 ];
 
 interface RoomData {
@@ -80,7 +80,7 @@ export default function CalendarIndex({ rooms, bookings, year, month }: Props) {
         let y = year;
         if (m < 1) { m = 12; y -= 1; }
         if (m > 12) { m = 1; y += 1; }
-        router.get('/calendar', { year: y, month: m }, { preserveState: false });
+        router.get('/admin/calendar', { year: y, month: m }, { preserveState: false });
     };
 
     // Build a lookup: roomId → bookings[]
@@ -131,7 +131,7 @@ export default function CalendarIndex({ rooms, bookings, year, month }: Props) {
                         <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-input hover:bg-muted text-lg">‹</button>
                         <span className="min-w-36 text-center font-semibold">{monthName}</span>
                         <button onClick={() => navigate(1)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-input hover:bg-muted text-lg">›</button>
-                        <button onClick={() => router.get('/calendar', { year: today.getFullYear(), month: today.getMonth() + 1 })}
+                        <button onClick={() => router.get('/admin/calendar', { year: today.getFullYear(), month: today.getMonth() + 1 })}
                             className="rounded-lg border border-input px-3 py-1.5 text-sm hover:bg-muted">Today</button>
                     </div>
                 </div>
@@ -260,7 +260,7 @@ export default function CalendarIndex({ rooms, bookings, year, month }: Props) {
                                                                         });
                                                                     }}
                                                                     onMouseLeave={() => setTooltip(null)}
-                                                                    onClick={() => router.visit(`/bookings?search=${encodeURIComponent(b.guest_name)}`)}
+                                                                    onClick={() => router.visit(`/admin/bookings?search=${encodeURIComponent(b.guest_name)}`)}
                                                                 >
                                                                     <span className="truncate">{b.guest_name}</span>
                                                                 </div>
@@ -275,7 +275,7 @@ export default function CalendarIndex({ rooms, bookings, year, month }: Props) {
                             })}
 
                             {rooms.length === 0 && (
-                                <div className="px-6 py-12 text-center text-muted-foreground">No rooms configured yet. <a href="/rooms" className="text-primary underline">Add rooms</a>.</div>
+                                <div className="px-6 py-12 text-center text-muted-foreground">No rooms configured yet. <a href="/admin/rooms" className="text-primary underline">Add rooms</a>.</div>
                             )}
                         </div>
                     </div>

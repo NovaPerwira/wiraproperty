@@ -74,7 +74,7 @@ export default function BookingsCreate({ rooms }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/bookings', { onSuccess: () => reset() });
+        post('/admin/bookings', { onSuccess: () => reset() });
     };
 
     const Field = ({ label, name, children }: { label: string; name: keyof FormData; children: React.ReactNode }) => (

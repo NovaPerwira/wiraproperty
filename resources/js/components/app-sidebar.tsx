@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
-import { dashboard } from '@/routes';
 
 
 export function AppSidebar() {
@@ -24,23 +23,23 @@ export function AppSidebar() {
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: '/admin/dashboard' as string,
             icon: LayoutGrid,
         },
         // Operations: admin and super_admin
         ...(role === 'admin' || role === 'super_admin'
             ? [
-                { title: 'Bookings', href: '/bookings' as string, icon: CalendarDays },
-                { title: 'Rooms', href: '/rooms' as string, icon: BedDouble },
-                { title: 'Calendar', href: '/calendar' as string, icon: CalendarDays },
-                { title: 'Guest Database', href: '/guests' as string, icon: Users },
-                { title: 'Payments', href: '/payments' as string, icon: CreditCard },
-                { title: 'Housekeeping', href: '/housekeeping' as string, icon: ClipboardList },
+                { title: 'Bookings', href: '/admin/bookings' as string, icon: CalendarDays },
+                { title: 'Rooms', href: '/admin/rooms' as string, icon: BedDouble },
+                { title: 'Calendar', href: '/admin/calendar' as string, icon: CalendarDays },
+                { title: 'Guest Database', href: '/admin/guests' as string, icon: Users },
+                { title: 'Payments', href: '/admin/payments' as string, icon: CreditCard },
+                { title: 'Housekeeping', href: '/admin/housekeeping' as string, icon: ClipboardList },
             ]
             : []),
         // User Management: super_admin only
         ...(role === 'super_admin'
-            ? [{ title: 'User Management', href: '/users' as string, icon: ShieldCheck }]
+            ? [{ title: 'User Management', href: '/admin/users' as string, icon: ShieldCheck }]
             : []),
     ];
 
@@ -51,7 +50,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={'/admin/dashboard'} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

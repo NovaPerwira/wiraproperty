@@ -69,27 +69,27 @@ export default function BookingsIndex({ bookings, filters }: Props) {
     const applyFilters = (overrides?: Partial<typeof f>) => {
         const params = { ...f, ...overrides };
         setF(params as typeof f);
-        router.get('/bookings', params, { preserveState: true, replace: true });
+        router.get('/admin/bookings', params, { preserveState: true, replace: true });
     };
 
     const clearFilters = () => {
         const empty = { search: '', status: '', source: '', date_from: '', date_to: '' };
         setF(empty);
-        router.get('/bookings', {}, { replace: true });
+        router.get('/admin/bookings', {}, { replace: true });
     };
 
     const advanceStatus = (id: number, next: string) => {
-        router.patch(`/bookings/${id}`, { status: next });
+        router.patch(`/admin/bookings/${id}`, { status: next });
     };
 
     const cancelBooking = (id: number) => {
         if (!confirm('Cancel this booking?')) return;
-        router.patch(`/bookings/${id}`, { status: 'cancelled' });
+        router.patch(`/admin/bookings/${id}`, { status: 'cancelled' });
     };
 
     const deleteBooking = (id: number, name: string) => {
         if (!confirm(`Delete booking for "${name}"?`)) return;
-        router.delete(`/bookings/${id}`);
+        router.delete(`/admin/bookings/${id}`);
     };
 
     const hasFilters = Object.values(f).some(Boolean);
@@ -105,7 +105,7 @@ export default function BookingsIndex({ bookings, filters }: Props) {
                         <h1 className="text-2xl font-bold">Booking Management</h1>
                         <p className="text-sm text-muted-foreground">{bookings.total} total booking{bookings.total !== 1 ? 's' : ''}</p>
                     </div>
-                    <Link href="/bookings/create" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                    <Link href="/admin/bookings/create" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
                         + New Booking
                     </Link>
                 </div>

@@ -148,17 +148,17 @@ export default function HousekeepingIndex() {
     const [newTask, setNewTask] = useState({ room_id: '', task_type: 'cleaning', priority: 'normal', notes: '', assigned_to: '', scheduled_for: date });
 
     const updateTask = (id: number, data: Record<string, string | number | null>) => {
-        router.patch(`/housekeeping/${id}`, data, { preserveState: false });
+        router.patch(`/admin/housekeeping/${id}`, data, { preserveState: false });
     };
 
     const changeDate = (d: string) => {
         setSelectedDate(d);
-        router.get('/housekeeping', { date: d }, { preserveState: true, replace: true });
+        router.get('/admin/housekeeping', { date: d }, { preserveState: true, replace: true });
     };
 
     const submitNewTask = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post('/housekeeping', newTask as unknown as Record<string, string>, {
+        router.post('/admin/housekeeping', newTask as unknown as Record<string, string>, {
             onSuccess: () => { setShowAddModal(false); },
         });
     };
@@ -185,7 +185,7 @@ export default function HousekeepingIndex() {
     ];
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Housekeeping', href: '/housekeeping' }]}>
+        <AppLayout breadcrumbs={[{ title: 'Housekeeping', href: '/admin/housekeeping' }]}>
             <Head title="Housekeeping Status" />
 
             <div className="p-6 space-y-6">

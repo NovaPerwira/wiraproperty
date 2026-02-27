@@ -2,11 +2,11 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { dashboard } from '@/routes';
+
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
-    { title: 'User Management', href: '/users' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
+    { title: 'User Management', href: '/admin/users' },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -42,7 +42,7 @@ export default function UsersIndex({ users }: UsersIndexProps) {
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/users', {
+        post('/admin/users', {
             onSuccess: () => {
                 reset();
                 setShowCreate(false);
@@ -51,12 +51,12 @@ export default function UsersIndex({ users }: UsersIndexProps) {
     };
 
     const handleRoleChange = (userId: number, newRole: string) => {
-        router.patch(`/users/${userId}`, { role: newRole });
+        router.patch(`/admin/users/${userId}`, { role: newRole });
     };
 
     const handleDelete = (userId: number, name: string) => {
         if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
-        router.delete(`/users/${userId}`);
+        router.delete(`/admin/users/${userId}`);
     };
 
     return (

@@ -10,14 +10,14 @@ const galleryItems = [
     src: "/api/placeholder/800/800", // Ganti dengan gambar besar kiri
     link: "/projects/earth-sentinels",
     // Class khusus agar item pertama melebar 2 kolom dan 2 baris
-    gridClass: "lg:col-span-2 lg:row-span-2", 
+    gridClass: "lg:col-span-2 lg:row-span-2",
   },
   {
     id: 2,
     title: "Light Portal",
     src: "/api/placeholder/400/400",
     link: "/projects/light-portal",
-    gridClass: "", 
+    gridClass: "",
   },
   {
     id: 3,
@@ -53,7 +53,7 @@ const GallerySection = () => {
   };
 
   // Variasi animasi fade in untuk setiap item
-  const itemVariant = {
+  const itemVariant: any = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
   };
@@ -61,8 +61,8 @@ const GallerySection = () => {
   return (
     <div className="bg-white py-24 w-full flex justify-center relative z-10">
       <div className="w-full max-w-[1440px] mx-auto px-8 lg:px-16">
-        
-        <motion.div 
+
+        <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
@@ -85,9 +85,9 @@ const GallerySection = () => {
                 className={`relative block rounded-[32px] overflow-hidden group ${item.gridClass} h-64 md:h-full`}
               >
                 {/* Gambar Latar */}
-                <img 
-                  src={item.src} 
-                  alt={item.title} 
+                <img
+                  src={item.src}
+                  alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                 />
 
@@ -97,7 +97,7 @@ const GallerySection = () => {
                 {/* Label Judul di Tengah (Muncul saat hover) */}
                 {/* Kita sembunyikan label hover ini KHUSUS untuk item terakhir, karena dia punya tombol statis */}
                 {!isLastItem && (
-                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-95 group-hover:scale-100">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-95 group-hover:scale-100">
                     <div className="bg-white/90 backdrop-blur-md text-[#1a2320] px-6 py-3 rounded-full text-sm md:text-base font-medium flex items-center gap-2 shadow-sm">
                       <Sun size={18} className="text-[#1a2320]" /> {/* Icon Hiasan */}
                       {item.title}

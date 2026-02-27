@@ -33,7 +33,7 @@ Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.i
 Route::post('/booking', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:5,1');
 
 // ── Dashboard — Hotel Performance Intelligence ─────────────────────────────
-Route::get('dashboard', function () {
+Route::middleware(['web', 'auth', 'admin'])->get('/admin/dashboard', function () {
     $today = now()->toDateString();
     $periodWeeks = max(4, min(26, (int) request()->input('period', 12))); // 4–26 weeks
     $perPage = max(5, min(50, (int) request()->input('per_page', 10)));
@@ -391,54 +391,52 @@ Route::get('dashboard', function () {
             'last_page' => (int) ceil($totalBookingCount / $perPage),
         ],
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->name('admin.dashboard');
 
 
 
 
-// ── Bookings + Rooms + Calendar + Guests + Payments + Housekeeping (admin+) ─
-Route::middleware(['auth', 'verified', 'role:admin,super_admin'])->group(function () {
-    // Bookings
-    Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
-    Route::get('bookings/create', [BookingController::class, 'create'])->name('bookings.create');
-    Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
-    Route::patch('bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
-    Route::delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+// ── Admin Routes ────────────────────────────────────────────────────────────
+Route::middleware(['web'])->prefix('admin')->group(function () {
 
-    // Rooms
-    Route::get('rooms', [RoomController::class, 'index'])->name('rooms.index');
-    Route::post('rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::patch('rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
-    Route::delete('rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
+    Route::get('/login', [\App\Http\Controllers\Admin\AuthController::class, 'show'])
+        ->name('admin.login');
 
-    // Calendar (occupancy view)
-    Route::get('calendar', [BookingController::class, 'calendar'])->name('calendar.index');
+    Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'login'])
+        ->middleware('throttle:5,1');
 
-    // Guests (CRM)
-    Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
-    Route::get('guests/{guest}', [GuestController::class, 'show'])->name('guests.show');
-    Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
-    Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
-    Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
+    Route::middleware(['auth', 'admin'])->group(function () {
 
-    // Payments
-    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
-    Route::patch('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+        Route::resource('rooms', RoomController::class);
+        Route::resource('bookings', BookingController::class);
 
-    // Housekeeping
-    Route::get('housekeeping', [HousekeepingController::class, 'index'])->name('housekeeping.index');
-    Route::post('housekeeping', [HousekeepingController::class, 'store'])->name('housekeeping.store');
-    Route::patch('housekeeping/{housekeepingTask}', [HousekeepingController::class, 'update'])->name('housekeeping.update');
-});
+        // Calendar (occupancy view)
+        Route::get('calendar', [BookingController::class, 'calendar'])->name('calendar.index');
 
+        // Guests (CRM)
+        Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::get('guests/{guest}', [GuestController::class, 'show'])->name('guests.show');
+        Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
+        Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
+        Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
 
-// ── User Management (super_admin only) ───────────────────────────────────────
-Route::middleware(['auth', 'verified', 'role:super_admin'])->group(function () {
-    Route::get('users', [UserController::class, 'index'])->name('users.index');
-    Route::post('users', [UserController::class, 'store'])->name('users.store');
-    Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        // Payments
+        Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::post('payments', [PaymentController::class, 'store'])->name('payments.store');
+        Route::patch('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update');
+
+        // Housekeeping
+        Route::get('housekeeping', [HousekeepingController::class, 'index'])->name('housekeeping.index');
+        Route::post('housekeeping', [HousekeepingController::class, 'store'])->name('housekeeping.store');
+        Route::patch('housekeeping/{housekeepingTask}', [HousekeepingController::class, 'update'])->name('housekeeping.update');
+
+        // User Management
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
 });
 
 require __DIR__ . '/settings.php';
