@@ -17,15 +17,24 @@ interface PublicLayoutProps {
 }
 
 export default function PublicLayout({ title, children }: PublicLayoutProps) {
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoading, setIsLoading] = useState<boolean>(() => {
+        // Only show splash screen on very first load of the session
+        if (typeof window !== 'undefined') {
+            return !window.sessionStorage.getItem('hasSeenSplash');
+        }
+        return true;
+    });
 
-    // Splashscreen Effect matching hero
+    // Splashscreen Effect
     useEffect(() => {
+        if (!isLoading) return;
+
         const timer = setTimeout(() => {
             setIsLoading(false);
+            window.sessionStorage.setItem('hasSeenSplash', 'true');
         }, 800);
         return () => clearTimeout(timer);
-    }, []);
+    }, [isLoading]);
 
     return (
         <>

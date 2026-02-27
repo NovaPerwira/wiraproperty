@@ -30,16 +30,23 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         const urlToCompare = currentUrl ?? currentUrlPath;
         const urlString = toUrl(urlToCheck);
 
-        if (!urlString.startsWith('http')) {
-            return urlString === urlToCompare;
-        }
-
+        let matchPath = urlString;
         try {
-            const absoluteUrl = new URL(urlString);
-            return absoluteUrl.pathname === urlToCompare;
+            if (urlString.startsWith('http')) {
+                const absoluteUrl = new URL(urlString);
+                matchPath = absoluteUrl.pathname;
+            }
         } catch {
             return false;
         }
+
+        // Exact match for the dashboard itself to prevent prefix collisons with other /admin routes
+        if (matchPath === '/admin/dashboard' || matchPath === '/') {
+            return matchPath === urlToCompare;
+        }
+
+        // Active if exact match or if it's a sub-route (e.g., /admin/guests/* matches /admin/guests)
+        return urlToCompare === matchPath || urlToCompare.startsWith(matchPath + '/');
     };
 
     const whenCurrentUrl: WhenCurrentUrlFn = <TIfTrue, TIfFalse = null>(

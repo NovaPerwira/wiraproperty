@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowUpRight, ChevronDown, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, router } from '@inertiajs/react';
+import { useCurrentUrl } from '@/hooks/use-current-url';
 
 // --- Data Navigasi ---
 const navItems = [
@@ -51,13 +52,12 @@ const navItems = [
 const MobileCardNav = ({
   logoName = 'Stayli',
   items,
-  activePath,
-  onNavigate,
   hidden,
   isAtTop,
   lang,
   setLang
 }) => {
+  const { isCurrentUrl } = useCurrentUrl();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLangDrop, setShowLangDrop] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -108,13 +108,11 @@ const MobileCardNav = ({
       >
         {/* Top Bar Mobile/Tablet */}
         <div className="absolute inset-x-0 top-0 h-[64px] flex items-center justify-between px-5 md:px-6 z-20 bg-transparent">
-          <div className="flex items-center cursor-pointer" onClick={() => { onNavigate('/home'); setIsExpanded(false); }}>
-            <span className="text-white text-xl font-medium tracking-tight flex items-center gap-2">
-              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                <div className="w-2 h-2 bg-black rounded-full" />
-              </div>
+          <div className="flex items-center cursor-pointer">
+            <Link href="/" className="text-white text-xl font-medium tracking-tight flex items-center gap-2" onClick={() => setIsExpanded(false)}>
+              <LogoIcon />
               {logoName}
-            </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">
@@ -162,12 +160,12 @@ const MobileCardNav = ({
               <div className="font-medium tracking-tight text-xl text-white/90">{item.label}</div>
               <div className="flex flex-col gap-2">
                 {item.links?.map((lnk, i) => {
-                  const isActive = activePath === lnk.href;
+                  const isActive = isCurrentUrl(lnk.href);
                   return (
                     <Link
                       key={`${lnk.label}-${i}`}
                       href={lnk.href}
-                      onClick={() => { onNavigate(lnk.href); toggleMenu(); }}
+                      onClick={() => setIsExpanded(false)}
                       className={`flex items-center justify-between no-underline cursor-pointer transition-all duration-300 group px-4 py-3 rounded-xl border ${isActive ? 'bg-white/20 text-white font-medium border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)]' : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white'}`}
                     >
                       <span className="flex items-center gap-3 text-sm">
@@ -191,13 +189,12 @@ const MobileCardNav = ({
 const DesktopFluidNav = ({
   logoName = 'Stayli',
   items,
-  activePath,
-  onNavigate,
   hidden,
   isAtTop,
   lang,
   setLang
 }) => {
+  const { isCurrentUrl } = useCurrentUrl();
   const [isLoaded, setIsLoaded] = useState(false);
   const [hoveredNav, setHoveredNav] = useState(null);
   const [hoveredLang, setHoveredLang] = useState(false);
@@ -232,17 +229,17 @@ const DesktopFluidNav = ({
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }} className="flex items-center justify-between w-full h-full">
 
               {/* Logo */}
-              <div className="flex items-center cursor-pointer pl-4 group" onClick={(e) => { e.preventDefault(); onNavigate('/home'); }}>
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3 transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-                  <div className="w-2.5 h-2.5 bg-black rounded-full" />
-                </div>
-                <span className="text-white text-lg font-semibold tracking-tight">{logoName}</span>
+              <div className="flex items-center pl-4 group">
+                <Link href="/" className="flex items-center gap-3">
+                  <LogoIcon />
+                  <span className="text-white text-lg font-semibold tracking-tight">{logoName}</span>
+                </Link>
               </div>
 
               {/* Tautan Desktop */}
               <div className="flex items-center space-x-2 h-full">
                 {items.map((category) => {
-                  const isActive = category.links.some(link => link.href === activePath);
+                  const isActive = category.links.some(link => isCurrentUrl(link.href));
 
                   return (
                     <div
@@ -251,7 +248,7 @@ const DesktopFluidNav = ({
                       onMouseLeave={() => setHoveredNav(null)}
                       className="relative h-full flex items-center px-2 cursor-pointer group"
                     >
-                      <Link href={category.links[0]?.href} onClick={() => { onNavigate(category.links[0]?.href); }} className="relative px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-colors">
+                      <Link href={category.links[0]?.href} className="relative px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-colors">
                         {isActive && (
                           <motion.div layoutId="desktop-active-pill" className="absolute inset-0 bg-white/15 border border-white/20 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.05)]" initial={false} transition={{ type: "spring", stiffness: 400, damping: 35 }} />
                         )}
@@ -281,9 +278,9 @@ const DesktopFluidNav = ({
                             <div className="flex flex-col gap-1.5 p-3">
                               <div className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 px-2">{category.label}</div>
                               {category.links.map((lnk) => {
-                                const isLinkActive = activePath === lnk.href;
+                                const isLinkActive = isCurrentUrl(lnk.href);
                                 return (
-                                  <Link key={lnk.href} href={lnk.href} onClick={() => { onNavigate(lnk.href); setHoveredNav(null); }} className={`flex items-center justify-between p-3.5 rounded-xl transition-all duration-300 group/link ${isLinkActive ? 'bg-white/20 text-white border border-white/10 shadow-sm' : 'hover:bg-white/[0.08] border border-transparent text-white/70 hover:text-white'}`}>
+                                  <Link key={lnk.href} href={lnk.href} onClick={() => setHoveredNav(null)} className={`flex items-center justify-between p-3.5 rounded-xl transition-all duration-300 group/link ${isLinkActive ? 'bg-white/20 text-white border border-white/10 shadow-sm' : 'hover:bg-white/[0.08] border border-transparent text-white/70 hover:text-white'}`}>
                                     <span className="flex items-center gap-3 text-sm font-medium">
                                       {isLinkActive ? <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" /> : <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover/link:bg-white/50 transition-colors" />}
                                       {lnk.label}
@@ -350,9 +347,15 @@ const DesktopFluidNav = ({
   );
 };
 
+// --- Helper Komponen ---
+const LogoIcon = () => (
+  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+    <div className="w-2.5 h-2.5 bg-black rounded-full" />
+  </div>
+);
+
 // --- App Utama ---
 export default function Navbar() {
-  const [currentPage, setCurrentPage] = useState('/featured');
   const [lang, setLang] = useState('EN');
   const [isMobile, setIsMobile] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -390,9 +393,9 @@ export default function Navbar() {
 
       {/* Render komponen Nav */}
       {isMobile ? (
-        <MobileCardNav logoName="Stayli" items={navItems} activePath={currentPage} onNavigate={setCurrentPage} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
+        <MobileCardNav logoName="Stayli" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
       ) : (
-        <DesktopFluidNav logoName="Stayli" items={navItems} activePath={currentPage} onNavigate={setCurrentPage} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
+        <DesktopFluidNav logoName="Stayli" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
       )}
 
     </div>

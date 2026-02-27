@@ -88,16 +88,24 @@ const roomsData: RoomStay[] = [
 export default function App() {
   // State dengan tipe eksplisit
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !window.sessionStorage.getItem('hasSeenSplash');
+    }
+    return true;
+  });
   const [showMobileCTA, setShowMobileCTA] = useState<boolean>(false);
 
   // Efek Splashscreen
   useEffect(() => {
+    if (!isLoading) return;
+
     const timer = setTimeout(() => {
       setIsLoading(false);
+      window.sessionStorage.setItem('hasSeenSplash', 'true');
     }, 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isLoading]);
 
   // Logika Sticky CTA untuk Mobile
   useEffect(() => {
