@@ -1,6 +1,7 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { useTranslation } from 'react-i18next';
 
 interface Task {
     id: number;
@@ -142,6 +143,7 @@ function TaskCard({ task, staff, onUpdate }: { task: Task; staff: Staff[]; onUpd
 }
 
 export default function HousekeepingIndex() {
+    const { t } = useTranslation();
     const { tasks, summary, staff, date, flash } = usePage<PageProps>().props;
     const [selectedDate, setSelectedDate] = useState(date);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -198,7 +200,7 @@ export default function HousekeepingIndex() {
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Housekeeping Board</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('housekeeping.title')}</h1>
                         <p className="text-sm text-neutral-400 mt-1">Status kebersihan dan maintenance kamar</p>
                     </div>
                     <div className="flex gap-2 items-center flex-wrap">

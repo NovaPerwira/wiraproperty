@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { useTranslation } from 'react-i18next';
 
 interface Guest {
     id: number;
@@ -41,6 +42,7 @@ const formatIDR = (n: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
 export default function GuestsIndex() {
+    const { t } = useTranslation();
     const { guests, stats, filters, flash } = usePage<PageProps>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [blacklisted, setBlacklisted] = useState(filters.blacklisted ?? '');
@@ -74,7 +76,7 @@ export default function GuestsIndex() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Guest Database</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('guests.title')}</h1>
                         <p className="text-sm text-neutral-400 mt-1">Profil tamu, riwayat menginap & preferensi</p>
                     </div>
                 </div>
@@ -129,14 +131,14 @@ export default function GuestsIndex() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-neutral-800 text-neutral-400 text-left">
-                                    {[['name', 'Tamu'], ['email', 'Email'], ['total_bookings', 'Menginap'], ['total_spend', 'Total Spend']].map(([col, label]) => (
+                                    {[['name', t('guests.name')], ['email', t('guests.email')], ['total_bookings', t('guests.bookings')], ['total_spend', 'Total Spend']].map(([col, label]) => (
                                         <th key={col} onClick={() => handleSort(col)} className="cursor-pointer px-4 py-3 hover:text-white transition-colors font-medium">
-                                            {label}<SortIcon col={col} />
+                                            {label as string}<SortIcon col={col} />
                                         </th>
                                     ))}
                                     <th className="px-4 py-3 font-medium">Nacionalitas</th>
-                                    <th className="px-4 py-3 font-medium">Status</th>
-                                    <th className="px-4 py-3 font-medium">Aksi</th>
+                                    <th className="px-4 py-3 font-medium">{t('common.status')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('common.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>

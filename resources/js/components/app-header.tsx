@@ -34,6 +34,7 @@ import { cn, toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
+import { LanguageSwitcher } from './language-switcher';
 
 
 type Props = {
@@ -213,6 +214,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                         </Tooltip>
                                     </TooltipProvider>
                                 ))}
+                                <LanguageSwitcher />
                             </div>
                         </div>
                         <DropdownMenu>

@@ -1,0 +1,70 @@
+{
+    "common": {
+        "dashboard": "Dasbor",
+        "rooms": "Kamar",
+        "bookings": "Pemesanan",
+        "calendar": "Kalender",
+        "guests": "Tamu",
+        "payments": "Pembayaran",
+        "housekeeping": "Tata Graha",
+        "users": "Manajemen Pengguna",
+        "logout": "Keluar",
+        "profile": "Profil",
+        "settings": "Pengaturan",
+        "language": "Bahasa",
+        "actions": "Aksi",
+        "status": "Status",
+        "edit": "Ubah",
+        "delete": "Hapus",
+        "cancel": "Batal",
+        "save": "Simpan",
+        "add_new": "Tambah Baru"
+    },
+    "rooms": {
+        "title": "Manajemen Kamar",
+        "add_room": "Tambah Kamar",
+        "edit_room": "Ubah Kamar",
+        "floor": "Lantai",
+        "type": "Tipe",
+        "rate": "Harga/Malam",
+        "amenities": "Fasilitas",
+        "room_number": "Nomor Kamar",
+        "view_grid": "Grid",
+        "view_table": "Tabel"
+    },
+    "bookings": {
+        "title": "Manajemen Pemesanan",
+        "add_booking": "Tambah Pemesanan",
+        "guest": "Tamu",
+        "check_in": "Check-in",
+        "check_out": "Check-out",
+        "amount": "Jumlah",
+        "source": "Sumber"
+    },
+    "guests": {
+        "title": "Database Tamu",
+        "add_guest": "Tambah Tamu",
+        "name": "Nama",
+        "email": "Email",
+        "phone": "Telepon",
+        "bookings": "Total Pemesanan"
+    },
+    "payments": {
+        "title": "Pembayaran",
+        "add_payment": "Tambah Pembayaran",
+        "amount": "Jumlah",
+        "method": "Metode",
+        "date": "Tanggal"
+    },
+    "housekeeping": {
+        "title": "Tata Graha",
+        "assign": "Tugaskan",
+        "task": "Tugas",
+        "staff": "Ditugaskan Ke"
+    },
+    "users": {
+        "title": "Manajemen Pengguna",
+        "add_user": "Tambah Pengguna",
+        "role": "Peran"
+    }
+}

@@ -1,6 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { useTranslation } from 'react-i18next';
 
 interface Payment {
     id: number;
@@ -69,6 +70,7 @@ interface AddPaymentFormState {
 }
 
 export default function PaymentsIndex() {
+    const { t } = useTranslation();
     const { payments, filters, todayRevenue, totalOutstanding, paidCount, dailyRevenue, flash } = usePage<PageProps>().props;
 
     const [statusF, setStatusF] = useState(filters.status ?? '');
@@ -109,7 +111,7 @@ export default function PaymentsIndex() {
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Payment Tracking</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('payments.title')}</h1>
                         <p className="text-sm text-neutral-400 mt-1">Status pembayaran, metode, dan laporan harian</p>
                     </div>
                     <div className="flex gap-2">
@@ -117,7 +119,7 @@ export default function PaymentsIndex() {
                             📊 {showChart ? 'Tutup' : 'Laporan Harian'}
                         </button>
                         <button onClick={() => setShowAdd(!showAdd)} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors">
-                            + Catat Pembayaran
+                            + {t('payments.add_payment')}
                         </button>
                     </div>
                 </div>
@@ -234,11 +236,11 @@ export default function PaymentsIndex() {
                             <thead>
                                 <tr className="border-b border-neutral-800 text-neutral-400 text-left">
                                     <th className="px-4 py-3 font-medium">Tamu / Booking</th>
-                                    <th className="px-4 py-3 font-medium">Jumlah</th>
+                                    <th className="px-4 py-3 font-medium">{t('payments.amount')}</th>
                                     <th className="px-4 py-3 font-medium">Outstanding</th>
-                                    <th className="px-4 py-3 font-medium">Metode</th>
-                                    <th className="px-4 py-3 font-medium">Status</th>
-                                    <th className="px-4 py-3 font-medium">Tanggal</th>
+                                    <th className="px-4 py-3 font-medium">{t('payments.method')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('common.status')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('payments.date')}</th>
                                     <th className="px-4 py-3 font-medium">Referensi</th>
                                     <th className="px-4 py-3 font-medium">Dicatat Oleh</th>
                                 </tr>

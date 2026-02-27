@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import AppearanceTabs from '@/components/appearance-tabs';
+import LanguageTabs from '@/components/language-tabs';
 import Heading from '@/components/heading';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -28,6 +29,17 @@ export default function Appearance() {
                         description="Update your account's appearance settings"
                     />
                     <AppearanceTabs />
+
+                    <div className="pt-4">
+                        <Heading
+                            variant="small"
+                            title="Language settings"
+                            description="Update your account's language settings"
+                        />
+                        <div className="mt-4">
+                            <LanguageTabs />
+                        </div>
+                    </div>
                 </div>
             </SettingsLayout>
         </AppLayout>

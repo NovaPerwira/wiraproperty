@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { translate, getStoredLocale, setStoredLocale, Locale } from '@/lib/i18n';
+import { useTranslation } from 'react-i18next';
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 const fmt = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -81,21 +81,23 @@ function SectionTitle({ icon, children }: { icon: string; children: React.ReactN
     );
 }
 
-function DeltaBadge({ metric, locale, isPercent = false }: { metric: KpiMetric; locale: Locale; isPercent?: boolean }) {
+function DeltaBadge({ metric, isPercent = false }: { metric: KpiMetric; isPercent?: boolean }) {
+    const { t } = useTranslation();
     if (metric.dir === 'neutral') return <span className="text-xs text-white/60">—</span>;
     const up = metric.dir === 'up';
     return (
         <span className={`inline-flex items-center gap-0.5 text-xs font-bold ${up ? 'text-emerald-300' : 'text-red-300'}`}>
             {up ? '▲' : '▼'} {metric.pct}{isPercent ? 'pp' : '%'}
-            <span className="font-normal opacity-75 ml-0.5">{translate(locale, 'delta.vs_lm')}</span>
+            <span className="font-normal opacity-75 ml-0.5">{t('delta.vs_lm')}</span>
         </span>
     );
 }
 
-function KpiCard({ label, metric, format, icon, gradient, locale }: {
+function KpiCard({ label, metric, format, icon, gradient }: {
     label: string; metric: KpiMetric;
-    format: (v: number) => string; icon: string; gradient: string; locale: Locale;
+    format: (v: number) => string; icon: string; gradient: string;
 }) {
+    const { t } = useTranslation();
     return (
         <div className={`relative overflow-hidden rounded-2xl p-5 shadow-md ${gradient}`}>
             <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
@@ -107,8 +109,8 @@ function KpiCard({ label, metric, format, icon, gradient, locale }: {
                 </div>
                 <p className="text-2xl font-bold text-white">{format(metric.value)}</p>
                 <div className="mt-1 flex items-center justify-between">
-                    <DeltaBadge locale={locale} metric={metric} isPercent={label.toLowerCase().includes('occupancy')} />
-                    <span className="text-xs text-white/50">{format(metric.prev)} {translate(locale, 'delta.vs_lm')}</span>
+                    <DeltaBadge metric={metric} isPercent={label.toLowerCase().includes('occupancy') || label.toLowerCase().includes('hunian')} />
+                    <span className="text-xs text-white/50">{format(metric.prev)} {t('delta.vs_lm')}</span>
                 </div>
             </div>
         </div>
@@ -132,16 +134,9 @@ export default function Dashboard() {
     const { kpi, ops, channelData, commissionSummary, cancellationData, insights, chartData, periodWeeks, recentBookings, pagination } =
         usePage<PageProps>().props;
 
-    const [locale, setLocale] = useState<Locale>(getStoredLocale());
+    const { t, i18n } = useTranslation();
     const [activePeriod, setActivePeriod] = useState(periodWeeks ?? 12);
     const [activeChart, setActiveChart] = useState<'revenue' | 'occupancy' | 'cancellation'>('revenue');
-
-    const t = (key: string, params?: Record<string, string | number>) => translate(locale, key, params);
-
-    const changeLocale = (l: Locale) => {
-        setLocale(l);
-        setStoredLocale(l);
-    };
 
     const changePeriod = (p: number) => {
         setActivePeriod(p);
@@ -152,7 +147,7 @@ export default function Dashboard() {
         router.get('/admin/dashboard', { page: p, period: activePeriod }, { preserveState: true, replace: true });
     };
 
-    const monthLabel = new Date().toLocaleString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' });
+    const monthLabel = new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' });
 
     // Breadcrumbs translated
     const translatedBreadcrumbs: BreadcrumbItem[] = [{ title: t('nav.dashboard'), href: '/dashboard' }];
@@ -168,7 +163,7 @@ export default function Dashboard() {
             params.c = fmt(Number(vals[1]));
             params.a = fmt(Number(vals[2]));
         }
-        return t(key, params);
+        return String(t(key, params));
     };
 
     return (
@@ -185,17 +180,6 @@ export default function Dashboard() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* Locale Switcher */}
-                        <div className="flex rounded-lg bg-muted p-1 border border-sidebar-border/50">
-                            {(['en', 'id'] as Locale[]).map((l) => (
-                                <button key={l} onClick={() => changeLocale(l)}
-                                    className={`px-3 py-1 text-xs font-bold transition-all rounded ${locale === l
-                                        ? 'bg-white shadow-sm dark:bg-sidebar dark:text-white'
-                                        : 'text-muted-foreground hover:text-foreground'}`}>
-                                    {l.toUpperCase()}
-                                </button>
-                            ))}
-                        </div>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-xl dark:bg-indigo-900/40">🏨</span>
                     </div>
                 </div>
@@ -204,13 +188,13 @@ export default function Dashboard() {
                 <div>
                     <SectionTitle icon="📊">{t('section.business')} — {monthLabel}</SectionTitle>
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <KpiCard locale={locale} label={t('kpi.occupancy')} metric={kpi?.occupancy_rate} format={(v) => `${v}%`}
+                        <KpiCard label={t('kpi.occupancy')} metric={kpi?.occupancy_rate} format={(v) => `${v}%`}
                             icon="📈" gradient="bg-gradient-to-br from-indigo-600 to-violet-700" />
-                        <KpiCard locale={locale} label={t('kpi.revenue')} metric={kpi?.monthly_revenue} format={fmtRp}
+                        <KpiCard label={t('kpi.revenue')} metric={kpi?.monthly_revenue} format={fmtRp}
                             icon="💰" gradient="bg-gradient-to-br from-emerald-500 to-teal-700" />
-                        <KpiCard locale={locale} label={t('kpi.arr')} metric={kpi?.arr} format={fmtRp}
+                        <KpiCard label={t('kpi.arr')} metric={kpi?.arr} format={fmtRp}
                             icon="🏷️" gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
-                        <KpiCard locale={locale} label={t('kpi.revpar')} metric={kpi?.revpar} format={fmtRp}
+                        <KpiCard label={t('kpi.revpar')} metric={kpi?.revpar} format={fmtRp}
                             icon="🎯" gradient="bg-gradient-to-br from-rose-500 to-pink-700" />
                     </div>
                 </div>
@@ -238,7 +222,7 @@ export default function Dashboard() {
                                     <div className={`mt-0.5 w-1 flex-shrink-0 rounded-full self-stretch ${s.bar}`} />
                                     <div>
                                         <p className={`text-sm font-bold ${s.title}`}>
-                                            {ins.icon} {t(ins.title)}
+                                            {ins.icon} {String(t(ins.title))}
                                         </p>
                                         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{parseInsight(ins.message)}</p>
                                     </div>
@@ -281,10 +265,10 @@ export default function Dashboard() {
 
                     <div className="mt-6">
                         <p className="text-sm font-semibold mb-3">
-                            {activeChart === 'revenue' ? t('chart.revenue_title') :
-                                activeChart === 'occupancy' ? t('chart.occ_title') : t('chart.cancel_title')}
+                            {(activeChart === 'revenue' ? t('chart.revenue_title') :
+                                activeChart === 'occupancy' ? t('chart.occ_title') : t('chart.cancel_title')) as string}
                             {' — '}
-                            {t('chart.weekly', { n: activePeriod })}
+                            {t('chart.weekly', { n: activePeriod }) as string}
                         </p>
 
                         <ResponsiveContainer width="100%" height={260}>
@@ -301,7 +285,7 @@ export default function Dashboard() {
                                 <Tooltip formatter={(v?: number) => activeChart === 'revenue' ? fmt(v ?? 0) : `${v ?? 0}%`} />
                                 <Area yAxisId="val" type="monotone"
                                     dataKey={activeChart === 'revenue' ? 'revenue' : activeChart === 'occupancy' ? 'occupancy' : 'cancel_rate'}
-                                    name={activeChart === 'revenue' ? t('chart.revenue') : activeChart === 'occupancy' ? t('kpi.occupancy') : t('cancel.rate')}
+                                    name={(activeChart === 'revenue' ? t('chart.revenue') : activeChart === 'occupancy' ? t('kpi.occupancy') : t('cancel.rate')) as string}
                                     stroke={activeChart === 'revenue' ? '#6366f1' : activeChart === 'occupancy' ? '#10b981' : '#f59e0b'}
                                     strokeWidth={2.5}
                                     fill="url(#areaGrad)"
@@ -427,8 +411,8 @@ export default function Dashboard() {
                 {/* ══ SECTION 6 – Recent Bookings (with Pagination) ════ */}
                 <div className="rounded-2xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-sidebar overflow-hidden">
                     <div className="flex items-center justify-between border-b border-sidebar-border/50 px-6 py-4">
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('section.recent')}</h2>
-                        <Link href="/admin/bookings" className="text-sm font-medium text-primary hover:underline">{t('table.view_all')}</Link>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('section.recent') as string}</h2>
+                        <Link href="/admin/bookings" className="text-sm font-medium text-primary hover:underline">{t('table.view_all') as string}</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
@@ -476,7 +460,7 @@ export default function Dashboard() {
                     {pagination && pagination.last_page > 1 && (
                         <div className="flex items-center justify-between border-t border-sidebar-border/50 bg-muted/10 px-6 py-3">
                             <p className="text-xs text-muted-foreground">
-                                {t('table.page')} <span className="font-semibold text-foreground">{pagination.page}</span> {t('table.of')} <span className="font-semibold text-foreground">{pagination.last_page}</span> ({pagination.total} {t('cancel.bookings')})
+                                {t('table.page') as string} <span className="font-semibold text-foreground">{pagination.page}</span> {t('table.of') as string} <span className="font-semibold text-foreground">{pagination.last_page}</span> ({pagination.total} {t('cancel.bookings') as string})
                             </p>
                             <div className="flex gap-2 text-xs">
                                 <button

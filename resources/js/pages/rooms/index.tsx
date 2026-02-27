@@ -2,6 +2,7 @@ import { Head, router, useForm, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -36,6 +37,7 @@ function fmt(n: number) {
 }
 
 export default function RoomsIndex({ rooms, roomTypes }: Props) {
+    const { t } = useTranslation();
     const [showCreate, setShowCreate] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -104,16 +106,16 @@ export default function RoomsIndex({ rooms, roomTypes }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Room Management</h1>
+                        <h1 className="text-2xl font-bold">{t('rooms.title')}</h1>
                         <p className="text-sm text-muted-foreground">{rooms.data.length} rooms on this page across {floors.length} floor{floors.length !== 1 ? 's' : ''}</p>
                     </div>
                     <div className="flex gap-2">
                         <div className="flex rounded-lg border border-input overflow-hidden">
-                            <button onClick={() => setViewMode('grid')} className={`px-3 py-1.5 text-sm ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>⊞ Grid</button>
-                            <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 text-sm ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>≡ Table</button>
+                            <button onClick={() => setViewMode('grid')} className={`px-3 py-1.5 text-sm ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>⊞ {t('rooms.view_grid')}</button>
+                            <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 text-sm ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}>≡ {t('rooms.view_table')}</button>
                         </div>
                         <button onClick={() => setShowCreate((v) => !v)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                            {showCreate ? 'Cancel' : '+ Add Room'}
+                            {showCreate ? t('common.cancel') : `+ ${t('rooms.add_room')}`}
                         </button>
                     </div>
                 </div>
@@ -291,13 +293,13 @@ export default function RoomsIndex({ rooms, roomTypes }: Props) {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-sidebar-border/50 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                        <th className="px-5 py-3">Room</th>
-                                        <th className="px-5 py-3">Type</th>
-                                        <th className="px-5 py-3">Floor</th>
-                                        <th className="px-5 py-3">Rate/Night</th>
-                                        <th className="px-5 py-3">Amenities</th>
-                                        <th className="px-5 py-3">Status</th>
-                                        <th className="px-5 py-3 text-right">Actions</th>
+                                        <th className="px-5 py-3">{t('rooms.room_number')}</th>
+                                        <th className="px-5 py-3">{t('rooms.type')}</th>
+                                        <th className="px-5 py-3">{t('rooms.floor')}</th>
+                                        <th className="px-5 py-3">{t('rooms.rate')}</th>
+                                        <th className="px-5 py-3">{t('rooms.amenities')}</th>
+                                        <th className="px-5 py-3">{t('common.status')}</th>
+                                        <th className="px-5 py-3 text-right">{t('common.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

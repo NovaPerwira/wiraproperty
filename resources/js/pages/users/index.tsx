@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,6 +29,7 @@ interface UsersIndexProps {
 }
 
 export default function UsersIndex({ users }: UsersIndexProps) {
+    const { t } = useTranslation();
     const { auth } = usePage<{ auth: { user: { id: number; role: string } } }>().props;
     const [showCreate, setShowCreate] = useState(false);
 
@@ -67,14 +69,14 @@ export default function UsersIndex({ users }: UsersIndexProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">User Management</h1>
+                        <h1 className="text-2xl font-bold">{t('users.title')}</h1>
                         <p className="text-sm text-muted-foreground">Manage admins and staff members</p>
                     </div>
                     <button
                         onClick={() => setShowCreate((v) => !v)}
                         className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
                     >
-                        {showCreate ? 'Cancel' : '+ Add User'}
+                        {showCreate ? t('common.cancel') : `+ ${t('users.add_user')}`}
                     </button>
                 </div>
 
@@ -164,9 +166,9 @@ export default function UsersIndex({ users }: UsersIndexProps) {
                                 <tr className="border-b border-sidebar-border/50 text-left text-xs font-semibold uppercase text-muted-foreground">
                                     <th className="px-5 py-3">Name</th>
                                     <th className="px-5 py-3">Email</th>
-                                    <th className="px-5 py-3">Role</th>
+                                    <th className="px-5 py-3">{t('users.role')}</th>
                                     <th className="px-5 py-3">Joined</th>
-                                    <th className="px-5 py-3 text-right">Actions</th>
+                                    <th className="px-5 py-3 text-right">{t('common.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>

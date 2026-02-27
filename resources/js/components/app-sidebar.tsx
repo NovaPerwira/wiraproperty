@@ -14,32 +14,35 @@ import {
 } from '@/components/ui/sidebar';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
+import { useTranslation } from 'react-i18next';
 
 
 export function AppSidebar() {
     const { auth } = usePage<{ auth: { user: { role: string } } }>().props;
     const role = auth?.user?.role ?? 'staff';
 
+    const { t } = useTranslation();
+
     const mainNavItems: NavItem[] = [
         {
-            title: 'Dashboard',
+            title: t('common.dashboard'),
             href: '/admin/dashboard' as string,
             icon: LayoutGrid,
         },
         // Operations: admin and super_admin
         ...(role === 'admin' || role === 'super_admin'
             ? [
-                { title: 'Bookings', href: '/admin/bookings' as string, icon: CalendarDays },
-                { title: 'Rooms', href: '/admin/rooms' as string, icon: BedDouble },
-                { title: 'Calendar', href: '/admin/calendar' as string, icon: CalendarDays },
-                { title: 'Guest Database', href: '/admin/guests' as string, icon: Users },
-                { title: 'Payments', href: '/admin/payments' as string, icon: CreditCard },
-                { title: 'Housekeeping', href: '/admin/housekeeping' as string, icon: ClipboardList },
+                { title: t('common.bookings'), href: '/admin/bookings' as string, icon: CalendarDays },
+                { title: t('common.rooms'), href: '/admin/rooms' as string, icon: BedDouble },
+                { title: t('common.calendar'), href: '/admin/calendar' as string, icon: CalendarDays },
+                { title: t('common.guests'), href: '/admin/guests' as string, icon: Users },
+                { title: t('common.payments'), href: '/admin/payments' as string, icon: CreditCard },
+                { title: t('common.housekeeping'), href: '/admin/housekeeping' as string, icon: ClipboardList },
             ]
             : []),
         // User Management: super_admin only
         ...(role === 'super_admin'
-            ? [{ title: 'User Management', href: '/admin/users' as string, icon: ShieldCheck }]
+            ? [{ title: t('common.users'), href: '/admin/users' as string, icon: ShieldCheck }]
             : []),
     ];
 

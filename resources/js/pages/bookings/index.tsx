@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -58,6 +59,7 @@ interface Props {
 }
 
 export default function BookingsIndex({ bookings, filters }: Props) {
+    const { t } = useTranslation();
     const [f, setF] = useState({
         search: filters.search ?? '',
         status: filters.status ?? '',
@@ -102,11 +104,11 @@ export default function BookingsIndex({ bookings, filters }: Props) {
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Booking Management</h1>
+                        <h1 className="text-2xl font-bold">{t('bookings.title')}</h1>
                         <p className="text-sm text-muted-foreground">{bookings.total} total booking{bookings.total !== 1 ? 's' : ''}</p>
                     </div>
                     <Link href="/admin/bookings/create" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                        + New Booking
+                        + {t('bookings.add_booking')}
                     </Link>
                 </div>
 
@@ -158,14 +160,14 @@ export default function BookingsIndex({ bookings, filters }: Props) {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-sidebar-border/50 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                    <th className="px-5 py-3">Guest</th>
-                                    <th className="px-5 py-3">Room</th>
-                                    <th className="px-5 py-3">Check-in / out</th>
+                                    <th className="px-5 py-3">{t('bookings.guest')}</th>
+                                    <th className="px-5 py-3">{t('common.rooms')}</th>
+                                    <th className="px-5 py-3">{t('bookings.check_in')} / out</th>
                                     <th className="px-5 py-3">Nights</th>
-                                    <th className="px-5 py-3">Total</th>
-                                    <th className="px-5 py-3">Source</th>
-                                    <th className="px-5 py-3">Status</th>
-                                    <th className="px-5 py-3 text-right">Actions</th>
+                                    <th className="px-5 py-3">{t('bookings.amount')}</th>
+                                    <th className="px-5 py-3">{t('bookings.source')}</th>
+                                    <th className="px-5 py-3">{t('common.status')}</th>
+                                    <th className="px-5 py-3 text-right">{t('common.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>

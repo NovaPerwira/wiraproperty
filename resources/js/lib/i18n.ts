@@ -6,7 +6,7 @@
 
 export type Locale = 'en' | 'id';
 
-const translations: Record<Locale, Record<string, string>> = {
+export const translations: Record<Locale, Record<string, string>> = {
     en: {
         // Navigation
         'nav.dashboard': 'Dashboard',

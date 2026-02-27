@@ -1,0 +1,70 @@
+{
+    "common": {
+        "dashboard": "Dashboard",
+        "rooms": "Rooms",
+        "bookings": "Bookings",
+        "calendar": "Calendar",
+        "guests": "Guests",
+        "payments": "Payments",
+        "housekeeping": "Housekeeping",
+        "users": "User Management",
+        "logout": "Log Out",
+        "profile": "Profile",
+        "settings": "Settings",
+        "language": "Language",
+        "actions": "Actions",
+        "status": "Status",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "add_new": "Add New"
+    },
+    "rooms": {
+        "title": "Room Management",
+        "add_room": "Add Room",
+        "edit_room": "Edit Room",
+        "floor": "Floor",
+        "type": "Type",
+        "rate": "Rate/Night",
+        "amenities": "Amenities",
+        "room_number": "Room Number",
+        "view_grid": "Grid",
+        "view_table": "Table"
+    },
+    "bookings": {
+        "title": "Booking Management",
+        "add_booking": "Add Booking",
+        "guest": "Guest",
+        "check_in": "Check-in",
+        "check_out": "Check-out",
+        "amount": "Amount",
+        "source": "Source"
+    },
+    "guests": {
+        "title": "Guest Database",
+        "add_guest": "Add Guest",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "bookings": "Total Bookings"
+    },
+    "payments": {
+        "title": "Payments",
+        "add_payment": "Add Payment",
+        "amount": "Amount",
+        "method": "Method",
+        "date": "Date"
+    },
+    "housekeeping": {
+        "title": "Housekeeping",
+        "assign": "Assign Task",
+        "task": "Task",
+        "staff": "Assigned To"
+    },
+    "users": {
+        "title": "User Management",
+        "add_user": "Add User",
+        "role": "Role"
+    }
+}
