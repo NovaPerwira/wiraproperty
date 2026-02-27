@@ -22,26 +22,38 @@ class AuthController extends Controller
     /**
      * Handle an incoming admin authentication request.
      */
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $user = Auth::user();
+        if (Auth::validate($credentials)) {
+            /** @var \App\Models\User $user */
+            $user = Auth::getProvider()->retrieveByCredentials($credentials);
 
-            if (!in_array($user->role, ['admin', 'super_admin'])) {
-                Auth::guard('web')->logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
+            if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
                 return back()->withErrors([
                     'email' => 'The provided credentials do not match our records.',
                 ])->onlyInput('email');
             }
 
+            // Check if 2FA is enabled
+            if (
+                optional($user)->two_factor_secret &&
+                in_array(\Laravel\Fortify\TwoFactorAuthenticatable::class, class_uses_recursive($user))
+            ) {
+
+                $request->session()->put([
+                    'login.id' => $user->getKey(),
+                    'login.remember' => $request->boolean('remember'),
+                ]);
+
+                return redirect()->route('two-factor.login');
+            }
+
+            Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
             return redirect()->intended(route('admin.dashboard'));
