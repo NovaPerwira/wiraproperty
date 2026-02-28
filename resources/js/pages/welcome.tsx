@@ -63,6 +63,8 @@ const facilitiesData: Facility[] = [
   { icon: <ShieldCheck size={32} />, title: "Keamanan 24/7", desc: "Ketenangan pikiran Anda" }
 ];
 
+
+
 const roomsData: RoomStay[] = [
   {
     id: "stay-1",
@@ -161,7 +163,7 @@ export default function App() {
 
   return (
     <>
-      <Head title="Welcome | Stayli" />
+      <Head title="Welcome | Kavushion" />
       {/* Splash Screen Asli */}
       <AnimatePresence>
         {isLoading && (
@@ -192,7 +194,8 @@ export default function App() {
               initial={{ scale: 1.1 }}
               animate={!isLoading ? { scale: 1 } : {}}
               transition={{ duration: 1.5, ease: "easeOut" }}
-              src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2850&q=80"
+              // src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2850&q=80"
+              src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Modern vacation home"
               className="w-full h-full object-cover object-center"
             />
@@ -229,13 +232,20 @@ export default function App() {
             <div className="relative z-30 max-w-[1000px] mx-auto px-6">
               <form
                 onSubmit={submitForm}
-                className="bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] p-3 md:p-4 flex flex-col md:flex-row items-center gap-3 border border-gray-100 relative"
+                className="rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] p-3 md:p-4 flex flex-col md:flex-row items-center gap-3 relative"
+                style={{
+                  backgroundColor: 'rgba(25, 25, 25, 0.45)', // Liquid Glass Base
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1)'
+                }}
               >
 
                 {/* Input Tanggal Interaktif */}
                 <motion.div
-                  whileHover={{ scale: 1.02, backgroundColor: "#f0f0f0" }}
+                  whileHover={{ scale: 1.02 }}
                   className="flex-1 w-full flex items-center gap-4 px-6 py-3 bg-[#f9f9f9] transition-colors rounded-2xl"
+                  
                 >
                   <Calendar className="text-[#5a5a4a]" size={22} />
                   <div className="flex flex-col w-full relative">

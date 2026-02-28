@@ -50,7 +50,7 @@ const navItems = [
 
 // --- Komponen Mobile & Tablet CardNav ---
 const MobileCardNav = ({
-  logoName = 'Stayli',
+  logoName = 'Kavushion',
   items,
   hidden,
   isAtTop,
@@ -187,7 +187,7 @@ const MobileCardNav = ({
 
 // --- Komponen Desktop Fluid Nav ---
 const DesktopFluidNav = ({
-  logoName = 'Stayli',
+  logoName = 'Kavushion',
   items,
   hidden,
   isAtTop,
@@ -349,9 +349,9 @@ const DesktopFluidNav = ({
 
 // --- Helper Komponen ---
 const LogoIcon = () => (
-  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-    <div className="w-2.5 h-2.5 bg-black rounded-full" />
-  </div>
+
+  <img src="/logo.svg" alt="Logo" className='  rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]' width={32} height={32} />
+
 );
 
 // --- App Utama ---
@@ -393,9 +393,9 @@ export default function Navbar() {
 
       {/* Render komponen Nav */}
       {isMobile ? (
-        <MobileCardNav logoName="Stayli" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
+        <MobileCardNav logoName="Kavushion" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
       ) : (
-        <DesktopFluidNav logoName="Stayli" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
+        <DesktopFluidNav logoName="Kavushion" items={navItems} hidden={hidden} isAtTop={isAtTop} lang={lang} setLang={setLang} />
       )}
 
     </div>
