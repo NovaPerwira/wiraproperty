@@ -7,14 +7,6 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 // --- Data Navigasi ---
 const navItems = [
   {
-    label: "Hero",
-    bgColor: "rgba(255,255,255,0.03)",
-    textColor: "#fff",
-    links: [
-      { label: "Welcome Page", href: "/", ariaLabel: "Home Page" },
-    ]
-  },
-  {
     label: "Rooms",
     bgColor: "rgba(255,255,255,0.03)",
     textColor: "#fff",
