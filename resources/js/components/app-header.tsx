@@ -36,7 +36,6 @@ import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 import { LanguageSwitcher } from './language-switcher';
 
-
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
 };

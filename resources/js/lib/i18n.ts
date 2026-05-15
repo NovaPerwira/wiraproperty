@@ -81,9 +81,12 @@ export const translations: Record<Locale, Record<string, string>> = {
         'cancel.of': 'cancelled of',
         'cancel.bookings': 'bookings',
         'cancel.by_channel': 'By Channel',
-        'cancel.insight_high': 'Very high cancellation rate. Apply non-refundable rates or mandatory deposit.',
-        'cancel.insight_mid': 'Moderate cancellation rate. Monitor which channel contributes the most.',
-        'cancel.insight_ok': 'Healthy cancellation rate — booking policies are effective.',
+        'cancel.insight_high':
+            'Very high cancellation rate. Apply non-refundable rates or mandatory deposit.',
+        'cancel.insight_mid':
+            'Moderate cancellation rate. Monitor which channel contributes the most.',
+        'cancel.insight_ok':
+            'Healthy cancellation rate — booking policies are effective.',
 
         // Recent bookings table
         'table.guest': 'Guest',
@@ -101,25 +104,35 @@ export const translations: Record<Locale, Record<string, string>> = {
 
         // Insights
         'insight.occ_low_title': 'Low Occupancy',
-        'insight.occ_low_msg': 'Occupancy rate {v}% — below 40% threshold. Consider promotions or bundling to drive demand.',
+        'insight.occ_low_msg':
+            'Occupancy rate {v}% — below 40% threshold. Consider promotions or bundling to drive demand.',
         'insight.occ_high_title': 'High Occupancy',
-        'insight.occ_high_msg': 'Occupancy rate {v}% — almost full! Consider dynamic pricing to maximize RevPAR.',
+        'insight.occ_high_msg':
+            'Occupancy rate {v}% — almost full! Consider dynamic pricing to maximize RevPAR.',
         'insight.ota_dep_title': 'High OTA Dependency',
-        'insight.ota_dep_msg': 'OTA {v}% of all bookings. Estimated commission this month: Rp {c} (annualized ~Rp {a}). Direct booking investment can increase margins significantly.',
+        'insight.ota_dep_msg':
+            'OTA {v}% of all bookings. Estimated commission this month: Rp {c} (annualized ~Rp {a}). Direct booking investment can increase margins significantly.',
         'insight.direct_title': 'Dominant Direct Channel',
-        'insight.direct_msg': '{v}% bookings via direct/walk-in — higher margins without OTA commissions.',
+        'insight.direct_msg':
+            '{v}% bookings via direct/walk-in — higher margins without OTA commissions.',
         'insight.rev_drop_title': 'Significant Revenue Drop',
-        'insight.rev_drop_msg': 'Revenue down {v}% vs last month. Check for seasonality or ARR changes.',
+        'insight.rev_drop_msg':
+            'Revenue down {v}% vs last month. Check for seasonality or ARR changes.',
         'insight.rev_grow_title': 'Strong Revenue Growth',
-        'insight.rev_grow_msg': 'Revenue up {v}% vs last month — above average.',
+        'insight.rev_grow_msg':
+            'Revenue up {v}% vs last month — above average.',
         'insight.cancel_high_title': 'High Cancellation Rate',
-        'insight.cancel_high_msg': 'Cancellation rate {v}% — exceeds 20% threshold. Consider non-refundable rates.',
+        'insight.cancel_high_msg':
+            'Cancellation rate {v}% — exceeds 20% threshold. Consider non-refundable rates.',
         'insight.cancel_mid_title': 'Monitor Cancellation Rate',
-        'insight.cancel_mid_msg': 'Cancellation rate {v}% — needs attention. Monitor which channel contributes most.',
+        'insight.cancel_mid_msg':
+            'Cancellation rate {v}% — needs attention. Monitor which channel contributes most.',
         'insight.arr_drop_title': 'Lower Average Room Rate',
-        'insight.arr_drop_msg': 'ARR down {v}% — potential over-discounting. Evaluate pricing strategy.',
+        'insight.arr_drop_msg':
+            'ARR down {v}% — potential over-discounting. Evaluate pricing strategy.',
         'insight.normal_title': 'Normal Performance',
-        'insight.normal_msg': 'All business metrics are within normal limits. No urgent actions required.',
+        'insight.normal_msg':
+            'All business metrics are within normal limits. No urgent actions required.',
 
         // Misc
         'misc.loading': 'Loading…',
@@ -201,9 +214,12 @@ export const translations: Record<Locale, Record<string, string>> = {
         'cancel.of': 'dibatalkan dari',
         'cancel.bookings': 'booking',
         'cancel.by_channel': 'Per Saluran',
-        'cancel.insight_high': '⛔ Cancellation rate sangat tinggi. Terapkan non-refundable rate atau deposit wajib.',
-        'cancel.insight_mid': '⚠️ Cancellation rate moderat. Pantau channel mana yang berkontribusi terbesar.',
-        'cancel.insight_ok': '✅ Cancellation rate sehat — kebijakan booking efektif.',
+        'cancel.insight_high':
+            '⛔ Cancellation rate sangat tinggi. Terapkan non-refundable rate atau deposit wajib.',
+        'cancel.insight_mid':
+            '⚠️ Cancellation rate moderat. Pantau channel mana yang berkontribusi terbesar.',
+        'cancel.insight_ok':
+            '✅ Cancellation rate sehat — kebijakan booking efektif.',
 
         // Recent bookings table
         'table.guest': 'Tamu',
@@ -221,25 +237,35 @@ export const translations: Record<Locale, Record<string, string>> = {
 
         // Insignths
         'insight.occ_low_title': 'Hunian Rendah',
-        'insight.occ_low_msg': 'Tingkat hunian {v}% — di bawah ambang 40%. Pertimbangkan promosi atau paket bundling untuk meningkatkan permintaan.',
+        'insight.occ_low_msg':
+            'Tingkat hunian {v}% — di bawah ambang 40%. Pertimbangkan promosi atau paket bundling untuk meningkatkan permintaan.',
         'insight.occ_high_title': 'Hunian Tinggi',
-        'insight.occ_high_msg': 'Tingkat hunian {v}% — hampir penuh! Pertimbangkan dynamic pricing untuk memaksimalkan RevPAR.',
+        'insight.occ_high_msg':
+            'Tingkat hunian {v}% — hampir penuh! Pertimbangkan dynamic pricing untuk memaksimalkan RevPAR.',
         'insight.ota_dep_title': 'Ketergantungan OTA Tinggi',
-        'insight.ota_dep_msg': 'OTA {v}% dari total booking. Estimasi komisi bulan ini: Rp {c} (annualized ~Rp {a}). Investasi pada booking langsung dapat meningkatkan margin secara signifikan.',
+        'insight.ota_dep_msg':
+            'OTA {v}% dari total booking. Estimasi komisi bulan ini: Rp {c} (annualized ~Rp {a}). Investasi pada booking langsung dapat meningkatkan margin secara signifikan.',
         'insight.direct_title': 'Channel Direct Dominan',
-        'insight.direct_msg': '{v}% booking melalui direct/walk-in — margin lebih tinggi tanpa komisi OTA.',
+        'insight.direct_msg':
+            '{v}% booking melalui direct/walk-in — margin lebih tinggi tanpa komisi OTA.',
         'insight.rev_drop_title': 'Penurunan Revenue Signifikan',
-        'insight.rev_drop_msg': 'Revenue turun {v}% vs bulan lalu. Periksa faktor musim atau perubahan tarif kamar.',
+        'insight.rev_drop_msg':
+            'Revenue turun {v}% vs bulan lalu. Periksa faktor musim atau perubahan tarif kamar.',
         'insight.rev_grow_title': 'Pertumbuhan Revenue Kuat',
-        'insight.rev_grow_msg': 'Revenue naik {v}% vs bulan lalu — di atas rata-rata.',
+        'insight.rev_grow_msg':
+            'Revenue naik {v}% vs bulan lalu — di atas rata-rata.',
         'insight.cancel_high_title': 'Tingkat Pembatalan Tinggi',
-        'insight.cancel_high_msg': 'Tingkat pembatalan {v}% — melebihi ambang 20%. Pertimbangkan kebijakan non-refundable.',
+        'insight.cancel_high_msg':
+            'Tingkat pembatalan {v}% — melebihi ambang 20%. Pertimbangkan kebijakan non-refundable.',
         'insight.cancel_mid_title': 'Pantau Tingkat Pembatalan',
-        'insight.cancel_mid_msg': 'Tingkat pembatalan {v}% — perlu diperhatikan. Pantau saluran mana yang memiliki pembatalan tertinggi.',
+        'insight.cancel_mid_msg':
+            'Tingkat pembatalan {v}% — perlu diperhatikan. Pantau saluran mana yang memiliki pembatalan tertinggi.',
         'insight.arr_drop_title': 'Tarif Kamar Menurun',
-        'insight.arr_drop_msg': 'ARR turun {v}% — potensi diskon berlebihan. Evaluasi strategi penetapan harga.',
+        'insight.arr_drop_msg':
+            'ARR turun {v}% — potensi diskon berlebihan. Evaluasi strategi penetapan harga.',
         'insight.normal_title': 'Performa Normal',
-        'insight.normal_msg': 'Semua metrik bisnis berada dalam batas normal. Tidak ada tindakan mendesak yang diperlukan.',
+        'insight.normal_msg':
+            'Semua metrik bisnis berada dalam batas normal. Tidak ada tindakan mendesak yang diperlukan.',
 
         // Misc
         'misc.loading': 'Memuat…',
@@ -248,7 +274,11 @@ export const translations: Record<Locale, Record<string, string>> = {
 };
 
 /** Simple key lookup with optional param interpolation: t('chart.weekly', { n: 8 }) */
-export function translate(locale: Locale, key: string, params?: Record<string, string | number>): string {
+export function translate(
+    locale: Locale,
+    key: string,
+    params?: Record<string, string | number>,
+): string {
     let str = translations[locale][key] ?? translations['en'][key] ?? key;
     if (params) {
         Object.entries(params).forEach(([k, v]) => {

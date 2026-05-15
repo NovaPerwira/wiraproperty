@@ -26,7 +26,7 @@ class FortifyServiceProvider extends ServiceProvider
                 return new class implements \Laravel\Fortify\Contracts\LoginResponse {
                     public function toResponse($request)
                     {
-                        return redirect()->intended(auth()->user()->isAdmin() ? route('admin.dashboard') : '/');
+                        return redirect()->intended(in_array(auth()->user()->role, ['admin', 'super_admin']) ? route('admin.dashboard') : '/');
                     }
                 };
             }
@@ -38,7 +38,7 @@ class FortifyServiceProvider extends ServiceProvider
                 return new class implements \Laravel\Fortify\Contracts\TwoFactorLoginResponse {
                     public function toResponse($request)
                     {
-                        return redirect()->intended(auth()->user()->isAdmin() ? route('admin.dashboard') : '/');
+                        return redirect()->intended(in_array(auth()->user()->role, ['admin', 'super_admin']) ? route('admin.dashboard') : '/');
                     }
                 };
             }

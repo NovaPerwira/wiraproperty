@@ -10,7 +10,9 @@ export default function AppLogo() {
                 <span className="mb-0.5 truncate leading-tight font-semibold">
                     Hotel Manager
                 </span>
-                <span className="truncate text-xs text-muted-foreground">Intelligence Dashboard</span>
+                <span className="truncate text-xs text-muted-foreground">
+                    Intelligence Dashboard
+                </span>
             </div>
         </>
     );

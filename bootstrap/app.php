@@ -27,6 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'admin' => \App\Http\Middleware\AdminAuthenticate::class,
         ]);
+
+        $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            if (auth()->check() && in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+                return route('admin.dashboard');
+            }
+            return '/';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

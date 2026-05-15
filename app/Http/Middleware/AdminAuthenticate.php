@@ -16,12 +16,15 @@ class AdminAuthenticate
      */
     public function handle($request, Closure $next)
     {
+        // Not logged in → redirect to admin login
         if (!auth()->check()) {
-            abort(404);
+            return redirect()->route('admin.login')
+                ->with('status', 'Please sign in to access the admin area.');
         }
 
+        // Logged in but not admin/super_admin → 403
         if (!in_array(auth()->user()->role, ['admin', 'super_admin'])) {
-            abort(404);
+            abort(403, 'Access restricted to administrators.');
         }
 
         return $next($request);

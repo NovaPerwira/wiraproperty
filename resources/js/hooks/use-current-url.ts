@@ -46,7 +46,10 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         }
 
         // Active if exact match or if it's a sub-route (e.g., /admin/guests/* matches /admin/guests)
-        return urlToCompare === matchPath || urlToCompare.startsWith(matchPath + '/');
+        return (
+            urlToCompare === matchPath ||
+            urlToCompare.startsWith(matchPath + '/')
+        );
     };
 
     const whenCurrentUrl: WhenCurrentUrlFn = <TIfTrue, TIfFalse = null>(

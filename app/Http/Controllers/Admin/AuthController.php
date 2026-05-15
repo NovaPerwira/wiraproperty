@@ -16,7 +16,9 @@ class AuthController extends Controller
      */
     public function show(): Response
     {
-        return Inertia::render('Admin/Auth/Login');
+        return Inertia::render('admin/login', [
+            'status' => session('status'),
+        ]);
     }
 
     /**
