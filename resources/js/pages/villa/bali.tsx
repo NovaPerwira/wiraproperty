@@ -5,10 +5,7 @@ import { usePage } from '@inertiajs/react';
 import { PropertyCard, PropertyItem } from '@/components/PropertyCard';
 
 const FALLBACK_IMAGES = [
-    'https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1600&q=80',
-    'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1600&q=80',
+    '/img/villa.png',
 ];
 
 const DEMO_VILLAS: PropertyItem[] = [

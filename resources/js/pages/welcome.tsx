@@ -94,7 +94,7 @@ const roomsData: RoomStay[] = [
         title: 'Desert Modern Villa',
         price: 'Rp 4.5M',
         beds: 2,
-        image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+        image: '/img/villa.png',
         tag: 'Popular',
         tagColor: 'bg-white/90 text-[#1a1a1a]',
     },
@@ -103,7 +103,7 @@ const roomsData: RoomStay[] = [
         title: 'Lakehouse Retreat',
         price: 'Rp 3.2M',
         beds: 1,
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+        image: '/img/rumah.png',
         tag: 'Free cancellation',
         tagColor: 'bg-white/90 text-[#1a1a1a]',
         tagIcon: <CheckCircle2 size={14} className="text-green-600" />,
@@ -203,7 +203,7 @@ export default function App() {
                             initial={{ scale: 1.1 }}
                             animate={{ scale: 1 }}
                             transition={{ duration: 1.5, ease: 'easeOut' }}
-                            src={heroImage || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
+                            src={heroImage || "/img/villa.png"}
                             alt="Modern vacation home"
                             className="h-full w-full object-cover object-center"
                         />

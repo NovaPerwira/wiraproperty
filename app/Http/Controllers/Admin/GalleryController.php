@@ -41,16 +41,23 @@ class GalleryController extends Controller
         $created = [];
 
         foreach ($request->file('images') as $file) {
+            if (empty($file->getRealPath())) {
+                continue;
+            }
+
             $path = $file->store('gallery', 'public');
-            $created[] = GalleryImage::create([
-                'path' => $path,
-                'url' => Storage::url($path),
-                'category' => $category,
-                'room_id' => $request->room_id,
-                'sort_order' => GalleryImage::max('sort_order') + 1,
-                'is_active' => true,
-                'is_featured' => false,
-            ]);
+            
+            if ($path) {
+                $created[] = GalleryImage::create([
+                    'path' => $path,
+                    'url' => Storage::url($path),
+                    'category' => $category,
+                    'room_id' => $request->room_id,
+                    'sort_order' => ((int) GalleryImage::max('sort_order')) + 1,
+                    'is_active' => true,
+                    'is_featured' => false,
+                ]);
+            }
         }
 
         return back()->with('success', count($created) . ' image(s) uploaded.');

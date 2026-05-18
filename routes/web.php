@@ -32,10 +32,11 @@ Route::middleware([\App\Http\Middleware\TrackPageView::class])->group(function (
             'canRegister'     => Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::registration()),
             'heroTitle'       => $get('hero_title', 'Sanctuary of <br class="hidden md:block" /><span class="font-light italic">Elegance.</span>'),
             'heroSubtitle'    => $get('hero_subtitle', 'Curated spaces for the discerning traveler. Find your perfect escape.'),
-            'heroImage'       => $get('hero_image', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
+            'heroImage'       => $get('hero_image', '/img/villa.png'),
             'aboutTitle'      => $get('about_title', 'Where every corner tells <br /> <span class="font-extrabold text-[#1a2320]">a story</span>'),
             'aboutSubtitle'   => $get('about_subtitle', "Explore Nuanu's living journey — where art, nature, and human spirit move together in endless creation."),
-            'aboutImage'      => $get('about_image', 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'),
+            'aboutImage'      => $get('about_image', '/img/rumah.png'),
+            'galleryItems'    => \App\Models\SiteSetting::where('group', 'gallery_section')->where('key', 'items')->first() ? json_decode(\App\Models\SiteSetting::where('group', 'gallery_section')->where('key', 'items')->first()->value, true) : null,
             'stats'           => $parseJson('stats', [
                 ['value' => 'IDR 5.6 Billion', 'label' => 'Distribute to impact'],
                 ['value' => '94.8%', 'label' => 'Waste recycling rate'],
@@ -47,7 +48,7 @@ Route::middleware([\App\Http\Middleware\TrackPageView::class])->group(function (
                     'title'    => 'Desert Modern Villa',
                     'price'    => 'Rp 4.5M',
                     'beds'     => 2,
-                    'image'    => 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+                    'image'    => '/img/villa.png',
                     'tag'      => 'Popular',
                     'tagColor' => 'bg-white/90 text-[#1a1a1a]',
                 ],
@@ -56,21 +57,28 @@ Route::middleware([\App\Http\Middleware\TrackPageView::class])->group(function (
                     'title'    => 'Lakehouse Retreat',
                     'price'    => 'Rp 3.2M',
                     'beds'     => 1,
-                    'image'    => 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
+                    'image'    => '/img/rumah.png',
                     'tag'      => 'Free cancellation',
                     'tagColor' => 'bg-white/90 text-[#1a1a1a]',
                 ]
             ]),
             'locationTitle'   => $get('location_title', 'Lokasi Strategis di Tabanan'),
             'locationSubtitle'=> $get('location_subtitle', 'Dikelilingi oleh keindahan alam Bali yang otentik, namun tetap mudah dijangkau dari berbagai destinasi populer.'),
-            'locationImage'   => $get('location_image', 'https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'),
+            'locationImage'   => $get('location_image', '/img/tanah.png'),
             'locations'       => $parseJson('locations', [
                 ['text' => 'Pantai Kedungu', 'dist' => '10 Menit Berkendara'],
                 ['text' => 'Tanah Lot Temple', 'dist' => '15 Menit Berkendara'],
                 ['text' => 'Canggu Area', 'dist' => '30 Menit Berkendara'],
                 ['text' => 'Bandara Ngurah Rai', 'dist' => '1.5 Jam Berkendara']
             ]),
-            'dbFacilities'    => \App\Models\Facility::where('is_active', true)->orderBy('sort_order')->take(4)->get()
+            'dbFacilities'    => \App\Models\Facility::where('is_active', true)->orderBy('sort_order')->take(4)->get()->whenEmpty(function () {
+                return collect([
+                    ['id' => 1, 'name' => 'Wi-Fi Berkecepatan Tinggi', 'description' => 'Gratis di seluruh area', 'icon' => 'wifi'],
+                    ['id' => 2, 'name' => 'Infinity Pool', 'description' => 'Pemandangan menakjubkan', 'icon' => 'map'],
+                    ['id' => 3, 'name' => 'Restoran & Bar', 'description' => 'Sajian lokal & internasional', 'icon' => 'coffee'],
+                    ['id' => 4, 'name' => 'Keamanan 24/7', 'description' => 'Ketenangan pikiran Anda', 'icon' => 'shield'],
+                ]);
+            })
         ]);
     })->name('home');
 
@@ -194,6 +202,10 @@ Route::middleware(['web'])->prefix('admin')->group(function () {
         // ── CMS: Homepage ─────────────────────────────────────────────────
         Route::get('cms/homepage', [\App\Http\Controllers\Admin\HomepageController::class, 'index'])->name('cms.homepage.index');
         Route::patch('cms/homepage', [\App\Http\Controllers\Admin\HomepageController::class, 'update'])->name('cms.homepage.update');
+
+        // ── CMS: Gallery Section ───────────────────────────────────────────
+        Route::get('cms/gallery-section', [\App\Http\Controllers\Admin\GallerySectionController::class, 'index'])->name('cms.gallery_section.index');
+        Route::post('cms/gallery-section', [\App\Http\Controllers\Admin\GallerySectionController::class, 'update'])->name('cms.gallery_section.update');
 
         // ── CMS: Stays Page ───────────────────────────────────────────────
         Route::get('cms/stays', [\App\Http\Controllers\Admin\StaysCmsController::class, 'index'])->name('cms.stays.index');

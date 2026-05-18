@@ -86,6 +86,7 @@ export function AppSidebar() {
             icon: BookOpen,
             items: [
                 { title: 'Homepage', href: '/admin/cms/homepage' as string, icon: Home },
+                { title: 'Gallery Section', href: '/admin/cms/gallery-section' as string, icon: Image },
                 { title: 'Stays Page', href: '/admin/cms/stays' as string, icon: BedDouble },
                 { title: 'Experience Page', href: '/admin/cms/experience' as string, icon: Sparkles },
                 { title: 'Dining Page', href: '/admin/cms/dining' as string, icon: Coffee },

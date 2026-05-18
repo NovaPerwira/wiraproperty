@@ -1,48 +1,58 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Grid as GridIcon } from 'lucide-react'; // Menggunakan icon matahari sebagai contoh hiasan label
+import { Sun, Grid as GridIcon } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
-// Data dummy untuk galeri. Ganti src dan link dengan data aslimu.
-const galleryItems = [
+const defaultGalleryItems = [
     {
         id: 1,
         title: 'Earth Sentinels',
-        src: '/api/placeholder/800/800', // Ganti dengan gambar besar kiri
-        link: '/projects/earth-sentinels',
+        src: '/img/villa.png', // Ganti dengan gambar besar kiri
+        link: '#',
         // Class khusus agar item pertama melebar 2 kolom dan 2 baris
         gridClass: 'lg:col-span-2 lg:row-span-2',
     },
     {
         id: 2,
         title: 'Light Portal',
-        src: '/api/placeholder/400/400',
-        link: '/projects/light-portal',
+        src: '/img/rumah.png',
+        link: '#',
         gridClass: '',
     },
     {
         id: 3,
         title: 'Night Sculpture',
-        src: '/api/placeholder/400/400',
-        link: '/projects/night-sculpture',
+        src: '/img/ruko.png',
+        link: '#',
         gridClass: '',
     },
     {
         id: 4,
         title: 'The Dome',
-        src: '/api/placeholder/400/400',
-        link: '/projects/the-dome',
+        src: '/img/tanah.png',
+        link: '#',
         gridClass: '',
     },
     {
         id: 5,
         title: 'Bamboo Structure',
-        src: '/api/placeholder/400/400',
-        link: '/projects/bamboo-structure',
+        src: '/img/villa.png',
+        link: '#',
         gridClass: '', // Item terakhir akan memiliki tombol "See all"
     },
 ];
 
-const GallerySection = () => {
+const GallerySection = ({ items }: { items?: any[] }) => {
+    // Attempt to get items from Inertia props if available
+    let inertiaItems;
+    try {
+        const props = usePage<any>().props;
+        inertiaItems = props.galleryItems;
+    } catch (e) {
+        // Not inside Inertia context
+    }
+
+    const galleryItems = items && items.length > 0 ? items : (inertiaItems && inertiaItems.length > 0 ? inertiaItems : defaultGalleryItems);
     // Variasi animasi stagger untuk container
     const staggerContainer = {
         hidden: { opacity: 0 },

@@ -599,14 +599,14 @@ export default function App(): JSX.Element {
         <footer className="bg-white py-12 text-[#6b6b6b] text-sm relative z-20">
           <div className="max-w-[1200px] mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <motion.div whileHover={{ scale: 1.05 }} className="flex items-center font-medium text-[#1a1a1a] cursor-pointer">
-              <Logo /> Stayli
+              <Logo /> WiraProperty
             </motion.div>
             <div className="flex space-x-8">
               <motion.a whileHover={{ y: -2, color: "#1a1a1a" }} href="#" className="transition-colors">Privacy</motion.a>
               <motion.a whileHover={{ y: -2, color: "#1a1a1a" }} href="#" className="transition-colors">Terms</motion.a>
               <motion.a whileHover={{ y: -2, color: "#1a1a1a" }} href="#" className="transition-colors">Sitemap</motion.a>
             </div>
-            <p>&copy; {new Date().getFullYear()} Stayli Inc.</p>
+            <p>&copy; {new Date().getFullYear()} WiraProperty Inc.</p>
           </div>
         </footer>
 
