@@ -7,33 +7,30 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 // --- Data Navigasi ---
 const navItems = [
     {
-        label: 'Rooms',
-        bgColor: 'rgba(255,255,255,0.03)',
-        textColor: '#fff',
-        links: [{ label: 'Our Stays', href: '/stays', ariaLabel: 'All Stays' }],
-    },
-    {
-        label: 'Experience',
+        label: 'Villa',
         bgColor: 'rgba(255,255,255,0.03)',
         textColor: '#fff',
         links: [
-            {
-                label: 'Wellness & Spa',
-                href: '/experience',
-                ariaLabel: 'Wellness Experiences',
-            },
+            { label: 'Villa Bali', href: '/villa/bali', ariaLabel: 'Villa Bali' },
+            { label: 'Villa Lombok', href: '/villa/lombok', ariaLabel: 'Villa Lombok' },
         ],
     },
     {
-        label: 'Dining',
+        label: 'Property',
         bgColor: 'rgba(255,255,255,0.03)',
         textColor: '#fff',
         links: [
-            {
-                label: 'Restaurants & Bars',
-                href: '/dining',
-                ariaLabel: 'Dining Options',
-            },
+            { label: 'Rumah', href: '/property/rumah', ariaLabel: 'Rumah' },
+            { label: 'Ruko', href: '/property/ruko', ariaLabel: 'Ruko' },
+            { label: 'Villa', href: '/property/villa', ariaLabel: 'Villa' },
+        ],
+    },
+    {
+        label: 'Tanah',
+        bgColor: 'rgba(255,255,255,0.03)',
+        textColor: '#fff',
+        links: [
+            { label: 'Tanah', href: '/tanah', ariaLabel: 'Tanah' },
         ],
     },
     {
@@ -46,7 +43,7 @@ const navItems = [
 
 // --- Komponen Mobile & Tablet CardNav ---
 const MobileCardNav = ({
-    logoName = 'Kavushion',
+    logoName = 'Wira Property',
     items,
     hidden,
     isAtTop,
@@ -243,7 +240,7 @@ const MobileCardNav = ({
 
 // --- Komponen Desktop Fluid Nav ---
 const DesktopFluidNav = ({
-    logoName = 'Kavushion',
+    logoName = 'Wira Property',
     items,
     hidden,
     isAtTop,
@@ -517,16 +514,19 @@ const DesktopFluidNav = ({
                                     </AnimatePresence>
                                 </div>
 
-                                {/* CTA Button */}
-                                <button
-                                    className="ml-2 cursor-pointer items-center rounded-full border-0 px-6 py-2.5 text-sm font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-105 active:scale-95"
+                                {/* CTA Button → WhatsApp */}
+                                <a
+                                    href="https://wa.me/6285739493437?text=Halo%20Wira%20Property%2C%20saya%20ingin%20informasi%20lebih%20lanjut"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-2 inline-flex cursor-pointer items-center gap-2 rounded-full border-0 px-6 py-2.5 text-sm font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-105 active:scale-95"
                                     style={{
-                                        backgroundColor: '#ffffff',
-                                        color: '#121212',
+                                        backgroundColor: '#25D366',
+                                        color: '#ffffff',
                                     }}
                                 >
-                                    Book Now
-                                </button>
+                                    💬 Hubungi Kami
+                                </a>
                             </div>
                         </motion.div>
                     )}
@@ -585,7 +585,7 @@ export default function Navbar() {
             {/* Render komponen Nav */}
             {isMobile ? (
                 <MobileCardNav
-                    logoName="Kavushion"
+                    logoName="Wira Property"
                     items={navItems}
                     hidden={hidden}
                     isAtTop={isAtTop}
@@ -594,7 +594,7 @@ export default function Navbar() {
                 />
             ) : (
                 <DesktopFluidNav
-                    logoName="Kavushion"
+                    logoName="Wira Property"
                     items={navItems}
                     hidden={hidden}
                     isAtTop={isAtTop}

@@ -80,6 +80,18 @@ Route::middleware([\App\Http\Middleware\TrackPageView::class])->group(function (
     Route::get('/about', [PageController::class, 'about'])->name('page.about');
     Route::get('/search-rooms', [SearchController::class, 'index'])->name('search.index');
     Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.index');
+
+    // ── Villa Routes ───────────────────────────────────────────────────────
+    Route::get('/villa/bali', [PageController::class, 'villaBali'])->name('page.villa.bali');
+    Route::get('/villa/lombok', [PageController::class, 'villaLombok'])->name('page.villa.lombok');
+
+    // ── Property Routes ────────────────────────────────────────────────────
+    Route::get('/property/rumah', [PageController::class, 'propertyRumah'])->name('page.property.rumah');
+    Route::get('/property/ruko', [PageController::class, 'propertyRuko'])->name('page.property.ruko');
+    Route::get('/property/villa', [PageController::class, 'propertyVilla'])->name('page.property.villa');
+
+    // ── Tanah Route ────────────────────────────────────────────────────────
+    Route::get('/tanah', [PageController::class, 'tanah'])->name('page.tanah');
 });
 
 Route::post('/booking', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:5,1');
@@ -117,6 +129,14 @@ Route::middleware(['web'])->prefix('admin')->group(function () {
         Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
         Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
         Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
+
+        // Properties CRUD
+        Route::get('properties/villa', [\App\Http\Controllers\Admin\PropertyController::class, 'villa'])->name('properties.villa');
+        Route::get('properties/general', [\App\Http\Controllers\Admin\PropertyController::class, 'general'])->name('properties.general');
+        Route::get('properties/tanah', [\App\Http\Controllers\Admin\PropertyController::class, 'tanah'])->name('properties.tanah');
+        Route::post('properties', [\App\Http\Controllers\Admin\PropertyController::class, 'store'])->name('properties.store');
+        Route::patch('properties/{property}', [\App\Http\Controllers\Admin\PropertyController::class, 'update'])->name('properties.update');
+        Route::delete('properties/{property}', [\App\Http\Controllers\Admin\PropertyController::class, 'destroy'])->name('properties.destroy');
 
         // Payments
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
@@ -190,6 +210,24 @@ Route::middleware(['web'])->prefix('admin')->group(function () {
         // ── CMS: About Page ──────────────────────────────────────────────
         Route::get('cms/about', [\App\Http\Controllers\Admin\AboutCmsController::class, 'index'])->name('cms.about.index');
         Route::patch('cms/about', [\App\Http\Controllers\Admin\AboutCmsController::class, 'update'])->name('cms.about.update');
+
+        // ── CMS: Villa Pages ──────────────────────────────────────────────
+        Route::get('cms/villa/bali', [\App\Http\Controllers\Admin\VillaCmsController::class, 'bali'])->name('cms.villa.bali.index');
+        Route::patch('cms/villa/bali', [\App\Http\Controllers\Admin\VillaCmsController::class, 'updateBali'])->name('cms.villa.bali.update');
+        Route::get('cms/villa/lombok', [\App\Http\Controllers\Admin\VillaCmsController::class, 'lombok'])->name('cms.villa.lombok.index');
+        Route::patch('cms/villa/lombok', [\App\Http\Controllers\Admin\VillaCmsController::class, 'updateLombok'])->name('cms.villa.lombok.update');
+
+        // ── CMS: Property Pages ───────────────────────────────────────────
+        Route::get('cms/property/rumah', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'rumah'])->name('cms.property.rumah.index');
+        Route::patch('cms/property/rumah', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'updateRumah'])->name('cms.property.rumah.update');
+        Route::get('cms/property/ruko', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'ruko'])->name('cms.property.ruko.index');
+        Route::patch('cms/property/ruko', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'updateRuko'])->name('cms.property.ruko.update');
+        Route::get('cms/property/villa', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'villa'])->name('cms.property.villa.index');
+        Route::patch('cms/property/villa', [\App\Http\Controllers\Admin\PropertyCmsController::class, 'updateVilla'])->name('cms.property.villa.update');
+
+        // ── CMS: Tanah Page ───────────────────────────────────────────────
+        Route::get('cms/tanah', [\App\Http\Controllers\Admin\TanahCmsController::class, 'index'])->name('cms.tanah.index');
+        Route::patch('cms/tanah', [\App\Http\Controllers\Admin\TanahCmsController::class, 'update'])->name('cms.tanah.update');
 
         // ── CMS: Analytics ────────────────────────────────────────────────
         Route::get('cms/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('cms.analytics.index');

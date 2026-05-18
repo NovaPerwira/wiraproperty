@@ -20,6 +20,10 @@ import {
     Home,
     MapPin,
     BookOpen,
+    TreePine,
+    Building2,
+    Palmtree,
+    Globe,
 } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { NavCms } from '@/components/nav-cms';
@@ -51,16 +55,31 @@ export function AppSidebar() {
         },
     ];
 
-    const hotelOperations: NavItem[] = role === 'admin' || role === 'super_admin' ? [
-        { title: t('common.bookings'), href: '/admin/bookings' as string, icon: CalendarDays },
-        { title: t('common.rooms'), href: '/admin/rooms' as string, icon: BedDouble },
-        { title: t('common.calendar'), href: '/admin/calendar' as string, icon: CalendarDays },
-        { title: t('common.guests'), href: '/admin/guests' as string, icon: Users },
-        { title: t('common.payments'), href: '/admin/payments' as string, icon: CreditCard },
-        { title: t('common.housekeeping'), href: '/admin/housekeeping' as string, icon: ClipboardList },
+    const generalOperationsGroups = role === 'admin' || role === 'super_admin' ? [
+        {
+            label: 'Properties & Rooms',
+            icon: Building2,
+            items: [
+                { title: 'Villa', href: '/admin/properties/villa' as string, icon: Palmtree },
+                { title: 'Property', href: '/admin/properties/general' as string, icon: Building2 },
+                { title: 'Tanah', href: '/admin/properties/tanah' as string, icon: TreePine },
+                { title: t('common.rooms'), href: '/admin/rooms' as string, icon: BedDouble },
+            ],
+        },
+        {
+            label: 'Operations',
+            icon: Settings,
+            items: [
+                { title: t('common.bookings'), href: '/admin/bookings' as string, icon: CalendarDays },
+                { title: t('common.calendar'), href: '/admin/calendar' as string, icon: CalendarDays },
+                { title: t('common.guests'), href: '/admin/guests' as string, icon: Users },
+                { title: t('common.payments'), href: '/admin/payments' as string, icon: CreditCard },
+                { title: t('common.housekeeping'), href: '/admin/housekeeping' as string, icon: ClipboardList },
+            ]
+        }
     ] : [];
 
-    // ── CMS groups (collapsible) ──────────────────────────────────────
+    // ── CMS groups (collapsible) ────────────────────────────────────────────────
     const cmsGroups = role === 'admin' || role === 'super_admin' ? [
         {
             label: 'Page Content',
@@ -71,6 +90,30 @@ export function AppSidebar() {
                 { title: 'Experience Page', href: '/admin/cms/experience' as string, icon: Sparkles },
                 { title: 'Dining Page', href: '/admin/cms/dining' as string, icon: Coffee },
                 { title: 'About Page', href: '/admin/cms/about' as string, icon: MapPin },
+            ],
+        },
+        {
+            label: 'Villa',
+            icon: Palmtree,
+            items: [
+                { title: 'Villa Bali', href: '/admin/cms/villa/bali' as string, icon: Palmtree },
+                { title: 'Villa Lombok', href: '/admin/cms/villa/lombok' as string, icon: Palmtree },
+            ],
+        },
+        {
+            label: 'Property',
+            icon: Building2,
+            items: [
+                { title: 'Rumah', href: '/admin/cms/property/rumah' as string, icon: Home },
+                { title: 'Ruko', href: '/admin/cms/property/ruko' as string, icon: Building2 },
+                { title: 'Villa', href: '/admin/cms/property/villa' as string, icon: Sparkles },
+            ],
+        },
+        {
+            label: 'Tanah',
+            icon: TreePine,
+            items: [
+                { title: 'Tanah', href: '/admin/cms/tanah' as string, icon: TreePine },
             ],
         },
         {
@@ -121,8 +164,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={dashboardItems} label="Overview" />
-                {hotelOperations.length > 0 && <NavMain items={hotelOperations} label="Hotel Operations" />}
-                {cmsGroups.length > 0 && <NavCms groups={cmsGroups} />}
+                {generalOperationsGroups.length > 0 && <NavCms groups={generalOperationsGroups} title="General Operations" groupIcon={Building2} />}
+                {cmsGroups.length > 0 && <NavCms groups={cmsGroups} title="Website CMS" groupIcon={Globe} />}
                 {adminItems.length > 0 && <NavMain items={adminItems} label="Administration" />}
             </SidebarContent>
 

@@ -19,13 +19,13 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
 import { useState } from 'react';
 
-interface NavCmsGroup {
+export interface NavCmsGroup {
     label: string;
     icon?: React.ElementType;
     items: NavItem[];
 }
 
-export function NavCms({ groups }: { groups: NavCmsGroup[] }) {
+export function NavCms({ groups, title, groupIcon: GroupIcon }: { groups: NavCmsGroup[], title?: string, groupIcon?: React.ElementType }) {
     const { isCurrentUrl } = useCurrentUrl();
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
         // Auto-open the group that contains the current URL
@@ -41,10 +41,12 @@ export function NavCms({ groups }: { groups: NavCmsGroup[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel className="flex items-center gap-1.5">
-                <Globe size={13} />
-                Website CMS
-            </SidebarGroupLabel>
+            {title && (
+                <SidebarGroupLabel className="flex items-center gap-1.5">
+                    {GroupIcon && <GroupIcon size={13} />}
+                    {title}
+                </SidebarGroupLabel>
+            )}
             <SidebarMenu>
                 {groups.map((group) => {
                     const active = isGroupActive(group.items);
